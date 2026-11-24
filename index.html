@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#080D19">
-<title>Деньги — контроль бюджета</title>
+<title>Гараж — учёт перепродажи авто</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -27,6 +27,7 @@
   --expense: #F87171;
   --expense-soft: rgba(248, 113, 113, 0.14);
   --warn: #EAB308;
+  --warn-soft: rgba(234, 179, 8, 0.14);
 
   --text: #E8EEF8;
   --muted: #9AA9C2;
@@ -38,7 +39,6 @@
   --sp-4: 16px;
   --sp-5: 20px;
   --sp-6: 28px;
-  --sp-7: 40px;
 
   --r-lg: 18px;
   --r-md: 14px;
@@ -75,7 +75,6 @@ body {
   color-scheme: dark;
 }
 
-/* Фоновый рисунок: слой затемнения поверх картинки, под интерфейсом */
 body::before {
   content: "";
   position: fixed;
@@ -87,24 +86,17 @@ body::before {
   pointer-events: none;
 }
 
-body::after {
-  display: none;
-}
-
 body.is-locked { overflow: hidden; }
 
 h1, h2, h3, p, dl, dd, dt, figure { margin: 0; }
 ul { margin: 0; padding: 0; list-style: none; }
-button, input, select { font: inherit; color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; }
 svg { display: block; }
 ::selection { background: rgba(37, 99, 235, 0.42); color: #fff; }
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .sr-only {
   position: absolute;
@@ -117,6 +109,7 @@ svg { display: block; }
 }
 
 input::-webkit-search-cancel-button { display: none; }
+input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
 
 /* ---------- Каркас ---------- */
 .app {
@@ -126,89 +119,55 @@ input::-webkit-search-cancel-button { display: none; }
 }
 
 .screen { display: none; }
-.screen.is-active { display: block; animation: fade 220ms var(--ease); }
-@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.screen.is-active { display: block; }
 
-/* ---------- Шапка ---------- */
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-3);
-  padding: 4px 0 16px;
+  padding: 8px 0 14px;
 }
 
 .brand {
   font-size: 24px;
   font-weight: 800;
-  letter-spacing: -0.045em;
-  line-height: 1;
+  letter-spacing: -0.03em;
 }
 .brand__dot { color: var(--accent); }
 
 .screen__title {
   font-size: 24px;
   font-weight: 800;
-  letter-spacing: -0.035em;
-  line-height: 1.1;
+  letter-spacing: -0.03em;
 }
 
-.month {
-  display: flex;
-  align-items: center;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  padding: 1px;
-}
-.month__btn {
+.icon-btn {
   display: grid;
   place-items: center;
   width: var(--tap);
   height: var(--tap);
-  border: 0;
-  border-radius: var(--r-sm);
-  background: none;
-  color: var(--muted);
-  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
-}
-.month__btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); color: var(--text); }
-.month__btn:active:not(:disabled) { transform: translateY(1px); }
-.month__btn:disabled { opacity: 0.3; }
-.month__btn svg { width: 16px; height: 16px; }
-.month__label {
-  min-width: 112px;
-  padding: 0 4px;
-  text-align: center;
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-/* ---------- Карточки и блоки ---------- */
-.card {
-  background: rgba(15, 23, 42, 0.86);
   border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  padding: 16px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.8);
+  color: var(--text);
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
-.card--flush { padding: 4px 16px; }
+.icon-btn:hover { background: var(--card-2); border-color: var(--line-2); }
+.icon-btn svg { width: 20px; height: 20px; }
 
-.block { margin-top: 24px; }
-.block__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  margin-bottom: 10px;
+.add-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(15, 23, 42, 0.8);
+  color: var(--accent-text);
 }
-.block__title {
-  font-size: var(--fs-md);
-  font-weight: 700;
-  letter-spacing: -0.015em;
-}
+.add-btn:hover { background: var(--accent-soft); border-color: rgba(37, 99, 235, 0.5); }
+.add-btn svg { width: 18px; height: 18px; }
 
 .link {
   min-height: var(--tap);
@@ -220,230 +179,270 @@ input::-webkit-search-cancel-button { display: none; }
   font-size: var(--fs-sm);
   font-weight: 600;
 }
-.link:hover { color: #C7D8FF; }
 .link--danger { color: #FCA5A5; }
-.link--danger:hover { color: #FECACA; }
 
-.add-btn {
-  display: grid;
-  place-items: center;
-  width: var(--tap);
-  height: var(--tap);
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-sm);
-  background: transparent;
-  color: var(--text);
-  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+/* ---------- Блоки ---------- */
+.block { margin-top: 24px; }
+.block__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: 10px;
 }
-.add-btn:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--line-2); }
-.add-btn:active { transform: translateY(1px); }
-.add-btn svg { width: 18px; height: 18px; }
-
-.icon-btn {
-  display: grid;
-  place-items: center;
-  width: var(--tap);
-  height: var(--tap);
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-sm);
-  background: transparent;
-  color: var(--text);
+.block__title {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
-.icon-btn:hover { background: rgba(255, 255, 255, 0.05); }
-.icon-btn svg { width: 18px; height: 18px; }
 
-/* ---------- Баланс ---------- */
-.balance {
-  position: relative;
-  background: linear-gradient(180deg, rgba(20, 34, 60, 0.90) 0%, rgba(15, 23, 42, 0.90) 100%);
+.card {
+  background: rgba(15, 23, 42, 0.86);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  padding: 18px;
-  touch-action: pan-y;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.card--flush { padding: 4px 16px; }
+.card--pad0 { padding: 0; overflow: hidden; }
+
+.empty {
+  padding: 18px 4px;
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--muted-2);
+}
+.empty--sm { padding: 12px 2px; font-size: var(--fs-xs); }
+/* ---------- Карточка «Сводка» ---------- */
+.hero {
+  position: relative;
   overflow: hidden;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: linear-gradient(180deg, rgba(20, 34, 60, 0.90) 0%, rgba(15, 23, 42, 0.90) 100%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
-.balance__head {
+.hero__label {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: var(--sp-2);
-}
-.balance__label {
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.balance__hint {
+  gap: var(--sp-3);
   font-size: 11px;
-  color: var(--muted-2);
-  white-space: nowrap;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
-.balance__value {
-  margin-top: 6px;
-  font-size: clamp(30px, 9vw, 44px);
+.hero__value {
+  margin-top: 4px;
+  font-size: 34px;
   font-weight: 800;
-  letter-spacing: -0.045em;
-  line-height: 1.06;
-  overflow-wrap: anywhere;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
 }
-.balance__value.is-negative { color: var(--expense); }
-.balance__stats {
+.hero__value.is-negative { color: var(--expense); }
+.hero__hint { font-size: 11px; color: var(--muted-2); }
+
+.hero__stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--sp-3);
+  gap: 12px;
   margin-top: 16px;
   padding-top: 14px;
   border-top: 1px solid var(--line);
 }
+.stat { min-width: 0; }
 .stat__label {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--fs-xs);
+  font-size: 11px;
   color: var(--muted);
 }
-.dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
-.dot--in { background: var(--income); }
-.dot--out { background: var(--expense); }
 .stat__value {
   display: block;
   margin-top: 2px;
-  font-size: clamp(15px, 4.4vw, 18px);
+  font-size: var(--fs-lg);
   font-weight: 700;
   letter-spacing: -0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .stat__value--in { color: var(--income); }
 .stat__value--out { color: var(--expense); }
+.dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+.dot--in { background: var(--income); }
+.dot--out { background: var(--expense); }
 
 /* ---------- Полоски прогресса ---------- */
 .bar {
-  height: 8px;
+  height: 7px;
   border-radius: 99px;
-  background: #18233A;
+  background: rgba(255, 255, 255, 0.08);
   overflow: hidden;
 }
-.bar--thin { height: 6px; }
+.bar--thin { height: 5px; }
 .bar__fill {
   height: 100%;
-  border-radius: inherit;
+  border-radius: 99px;
   background: var(--accent);
-  transition: width 320ms var(--ease);
+  transition: width 260ms var(--ease);
 }
 .bar__fill--warn { background: var(--warn); }
 .bar__fill--over { background: var(--expense); }
 .bar__fill--income { background: var(--income); }
-.bar__fill--cat { background: #3B82F6; }
+.bar__fill--cat { background: linear-gradient(90deg, #2563EB, #60A5FA); }
 
-/* ---------- Бюджеты в обзоре ---------- */
-.brow { padding: 12px 0; border-bottom: 1px solid var(--line); }
-.brow:last-child { border-bottom: 0; }
-.brow__top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--sp-2);
-  margin-bottom: 8px;
-}
-.brow__name {
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.brow__pct {
-  flex: none;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  color: var(--muted);
-}
-.brow__note {
-  margin-top: 6px;
-  font-size: var(--fs-xs);
-  color: var(--muted-2);
-}
-.brow.is-warn .brow__pct { color: var(--warn); }
-.brow.is-over .brow__pct { color: var(--expense); }
-.brow.is-over .brow__note { color: #FCA5A5; }
+/* ---------- Машины ---------- */
+.cars { display: grid; gap: 12px; }
 
-/* ---------- Категории ---------- */
-.crow { padding: 10px 0; border-bottom: 1px solid var(--line); }
-.crow:last-child { border-bottom: 0; }
-.crow__top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--sp-2);
-  margin-bottom: 7px;
+.car {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: rgba(15, 23, 42, 0.86);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
-.crow__name {
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.crow__sum {
-  flex: none;
-  font-size: var(--fs-xs);
-  color: var(--muted);
-  white-space: nowrap;
-}
+.car--sold { border-color: rgba(16, 185, 129, 0.32); }
 
-/* ---------- График тренда ---------- */
-.chart {
+.car__head {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 6px;
-  height: 154px;
-}
-.col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-  min-width: 0;
-}
-.col__value {
-  font-size: 10px;
-  line-height: 1;
-  color: var(--muted-2);
-  white-space: nowrap;
-}
-.col__bar {
-  width: 100%;
-  max-width: 34px;
-  min-height: 4px;
-  border-radius: 7px 7px 3px 3px;
-  background: var(--line-2);
-  transition: height 300ms var(--ease);
-}
-.col__label {
-  font-size: 11px;
-  line-height: 1;
-  color: var(--muted-2);
-}
-.col.is-current .col__bar { background: linear-gradient(180deg, #3B82F6, var(--accent)); }
-.col.is-current .col__value { color: #BFD2FF; font-weight: 700; }
-.col.is-current .col__label { color: var(--text); font-weight: 700; }
-
-/* ---------- Строка операции ---------- */
-.row {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto 40px;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-  padding: 6px 0;
 }
-.row--flat { grid-template-columns: 40px minmax(0, 1fr) auto; }
-.row + .row { border-top: 1px solid rgba(30, 42, 68, 0.6); }
+.car__ico {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #18233A;
+  font-size: 21px;
+  flex: none;
+}
+.car__name {
+  display: block;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.car__sub {
+  display: block;
+  font-size: 11px;
+  color: var(--muted-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.car__status {
+  padding: 4px 9px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.car__status--work {
+  background: var(--warn-soft);
+  color: #FCD34D;
+  border: 1px solid rgba(234, 179, 8, 0.32);
+}
+.car__status--sold {
+  background: var(--income-soft);
+  color: #6EE7B7;
+  border: 1px solid rgba(16, 185, 129, 0.32);
+}
 
+.car__money {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.car__cell { min-width: 0; }
+.car__cell-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+.car__cell-value {
+  display: block;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.car__cell-value--in { color: var(--income); }
+.car__cell-value--out { color: var(--expense); }
+
+.car__profit {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: var(--r-sm);
+  background: rgba(16, 185, 129, 0.10);
+  border: 1px solid rgba(16, 185, 129, 0.24);
+  font-size: var(--fs-sm);
+}
+.car__profit--loss {
+  background: var(--expense-soft);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+.car__profit--work {
+  background: rgba(234, 179, 8, 0.09);
+  border-color: rgba(234, 179, 8, 0.24);
+}
+.car__profit-label { font-size: 11px; color: var(--muted); }
+.car__profit-value {
+  font-size: var(--fs-md);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.car__profit-value--in { color: var(--income); }
+.car__profit-value--out { color: var(--expense); }
+.car__profit-value--work { color: #FCD34D; }
+
+.car__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+}
+/* ---------- Строки операций ---------- */
+.row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto 38px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+.row:last-child { border-bottom: 0; }
+.row--flat { grid-template-columns: 40px minmax(0, 1fr) auto; }
 .row__mark {
   display: grid;
   place-items: center;
@@ -452,17 +451,16 @@ input::-webkit-search-cancel-button { display: none; }
   border-radius: 12px;
   background: #18233A;
   font-size: 18px;
-  line-height: 1;
+  flex: none;
 }
-.row__mark--income { background: var(--income-soft); }
-.row__mark--expense { background: rgba(248, 113, 113, 0.1); }
-
 .row__main {
   min-width: 0;
-  padding: 6px 0;
+  display: block;
+  padding: 0;
   border: 0;
   background: none;
   text-align: left;
+  color: inherit;
 }
 .row__title {
   display: block;
@@ -474,7 +472,6 @@ input::-webkit-search-cancel-button { display: none; }
 }
 .row__meta {
   display: block;
-  margin-top: 1px;
   font-size: 11px;
   color: var(--muted-2);
   overflow: hidden;
@@ -488,41 +485,41 @@ input::-webkit-search-cancel-button { display: none; }
 }
 .row__amount--income { color: var(--income); }
 .row__amount--expense { color: var(--expense); }
-
 .row__del {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border: 0;
   border-radius: 10px;
   background: none;
   color: var(--muted-2);
-  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
-.row__del:hover { background: rgba(248, 113, 113, 0.12); color: #FCA5A5; }
+.row__del:hover { color: #FCA5A5; background: var(--expense-soft); }
 .row__del svg { width: 17px; height: 17px; }
+.row__main:hover .row__title { color: var(--accent-text); }
 
-.day { padding-bottom: 4px; }
-.day + .day { border-top: 8px solid var(--bg); }
+/* ---------- Группы по дням ---------- */
+.day { padding: 6px 0; }
+.day + .day { border-top: 1px solid var(--line); }
 .day__head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--sp-2);
-  padding: 12px 0 4px;
-  font-size: var(--fs-xs);
-  color: var(--muted);
+  gap: var(--sp-3);
+  padding: 6px 0 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted-2);
 }
-.day__sum { font-weight: 700; white-space: nowrap; }
+.day__sum { font-weight: 700; letter-spacing: 0; text-transform: none; }
 .day__sum.is-in { color: var(--income); }
 .day__sum.is-out { color: var(--expense); }
 
 /* ---------- Поиск и чипы ---------- */
-.search {
-  position: relative;
-  margin-bottom: 10px;
-}
+.search { position: relative; margin-bottom: 12px; }
 .search__icon {
   position: absolute;
   top: 50%;
@@ -538,27 +535,29 @@ input::-webkit-search-cancel-button { display: none; }
   padding: 0 14px 0 42px;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
-  background: var(--card);
+  background: rgba(15, 23, 42, 0.86);
   font-size: 16px;
 }
-.search__input::placeholder { color: var(--muted-2); }
-.search__input:focus { border-color: rgba(37, 99, 235, 0.6); outline: none; }
+.search__input:focus { border-color: rgba(37, 99, 235, 0.65); outline: none; }
 
 .chips {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 2px 0 10px;
+  padding: 0 0 12px;
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
   scrollbar-width: none;
 }
 .chips::-webkit-scrollbar { display: none; }
 .chip {
   flex: none;
-  min-height: 40px;
+  min-height: 36px;
   padding: 0 14px;
   border: 1px solid var(--line);
   border-radius: 99px;
-  background: var(--card);
+  background: rgba(15, 23, 42, 0.8);
   color: var(--muted);
   font-size: var(--fs-xs);
   font-weight: 600;
@@ -568,22 +567,83 @@ input::-webkit-search-cancel-button { display: none; }
 .chip:hover { color: var(--text); }
 .chip.is-on {
   background: var(--accent-soft);
-  border-color: rgba(37, 99, 235, 0.55);
-  color: #C7D8FF;
+  border-color: rgba(37, 99, 235, 0.6);
+  color: var(--accent-text);
 }
 
-/* ---------- Планы ---------- */
-.plan { padding: 12px 0; border-bottom: 1px solid var(--line); }
-.plan:last-child { border-bottom: 0; }
-.plan__row {
+/* ---------- Категории ---------- */
+.crow { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.crow:last-child { border-bottom: 0; }
+.crow__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: 6px;
+}
+.crow__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.crow__sum {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ---------- График ---------- */
+.chart {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  align-items: end;
+  gap: 6px;
+  height: 130px;
+}
+.col {
+  display: grid;
+  justify-items: center;
+  align-content: end;
+  gap: 5px;
+  height: 100%;
+}
+.col__value {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted-2);
+  white-space: nowrap;
+}
+.col__bar {
+  width: 100%;
+  max-width: 26px;
+  border-radius: 7px 7px 3px 3px;
+  background: rgba(37, 99, 235, 0.42);
+  transition: height 300ms var(--ease);
+}
+.col.is-current .col__bar { background: var(--accent); }
+.col.is-current .col__value { color: var(--accent-text); }
+.col__label {
+  font-size: 10px;
+  color: var(--muted-2);
+  text-transform: lowercase;
+}
+.col.is-current .col__label { color: var(--text); font-weight: 700; }
+
+/* ----- Список «Ремонт» ----- */
+.job { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.job:last-child { border-bottom: 0; }
+.job__head {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto 38px;
   align-items: center;
   gap: 10px;
 }
-.plan__row--del { grid-template-columns: 40px minmax(0, 1fr) auto 40px; }
-.plan__main { min-width: 0; }
-.plan__title {
+.job.is-done .job__title { text-decoration: line-through; color: var(--muted); }
+.job__title {
   display: block;
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -591,79 +651,38 @@ input::-webkit-search-cancel-button { display: none; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.plan__meta {
+.job__meta {
   display: block;
-  margin-top: 1px;
   font-size: 11px;
   color: var(--muted-2);
-}
-.plan__amount {
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  white-space: nowrap;
-}
-.plan__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 16px;
-  margin-top: 6px;
-}
-.plan__actions .link { min-height: var(--tap); }
-
-.goal { margin-bottom: 12px; }
-.goal:last-child { margin-bottom: 0; }
-.goal__head {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 40px;
-  align-items: center;
-  gap: 10px;
-}
-.goal__emoji {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: #18233A;
-  font-size: 22px;
-}
-.goal__text { min-width: 0; }
-.goal__title {
-  font-size: var(--fs-md);
-  font-weight: 700;
-  letter-spacing: -0.01em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.goal__meta { font-size: var(--fs-xs); color: var(--muted); }
-.goal .bar { margin-top: 10px; }
-.goal__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  margin-top: 8px;
-}
-.goal__pct { font-size: var(--fs-xs); font-weight: 700; color: var(--muted); }
-
-.debt-group { margin-bottom: 12px; }
-.debt-group:last-child { margin-bottom: 0; }
-.debt-group__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  margin-bottom: 4px;
-}
-.debt-group__title {
-  font-size: var(--fs-xs);
+.job__amount {
+  font-size: var(--fs-sm);
   font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: var(--warn);
 }
-.debt-group__title em { font-style: normal; color: var(--text); }
+.job.is-done .job__amount { color: var(--income); }
+
+.job__toggle {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(11, 19, 36, 0.7);
+  color: var(--muted-2);
+}
+.job.is-done .job__toggle {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: var(--income-soft);
+  color: #6EE7B7;
+}
+.job__toggle svg { width: 18px; height: 18px; }
 
 /* ---------- Ещё ---------- */
 .kv {
@@ -700,7 +719,8 @@ input::-webkit-search-cancel-button { display: none; }
   height: 38px;
   border-radius: 11px;
   background: #18233A;
-  font-size: 17px;
+  font-size: 15px;
+  font-weight: 700;
   flex: none;
 }
 .more-row__text { min-width: 0; flex: 1; }
@@ -740,7 +760,7 @@ input::-webkit-search-cancel-button { display: none; }
 }
 .tabbar__inner {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   max-width: var(--shell);
   margin: 0 auto;
 }
@@ -753,11 +773,11 @@ input::-webkit-search-cancel-button { display: none; }
   border: 0;
   background: none;
   color: var(--muted-2);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   transition: color var(--dur) var(--ease);
 }
-.tab svg { width: 22px; height: 22px; }
+.tab svg { width: 21px; height: 21px; }
 .tab.is-on { color: var(--accent-text); }
 .tab:hover { color: var(--text); }
 
@@ -840,11 +860,7 @@ input::-webkit-search-cancel-button { display: none; }
 
 /* ---------- Формы ---------- */
 .field { display: grid; gap: 6px; margin-bottom: 12px; }
-.field__label {
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  color: var(--muted);
-}
+.field__label { font-size: var(--fs-xs); font-weight: 600; color: var(--muted); }
 .input {
   width: 100%;
   height: 48px;
@@ -855,7 +871,14 @@ input::-webkit-search-cancel-button { display: none; }
   font-size: 16px;
 }
 .input:focus { border-color: rgba(37, 99, 235, 0.65); outline: none; }
-select.input { appearance: none; padding-right: 38px; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 19px) 21px, calc(100% - 14px) 21px; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
+select.input {
+  appearance: none;
+  padding-right: 38px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 19px) 21px, calc(100% - 14px) 21px;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
 .input-wrap { position: relative; }
 .input-wrap .input { padding-right: 40px; }
 .input-wrap__suffix {
@@ -866,11 +889,7 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
   color: var(--muted);
   pointer-events: none;
 }
-.hint {
-  margin: -2px 0 12px;
-  font-size: 11px;
-  color: var(--muted-2);
-}
+.hint { margin: -2px 0 12px; font-size: 11px; color: var(--muted-2); }
 .form__error {
   margin-top: 4px;
   color: #FCA5A5;
@@ -899,33 +918,7 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
   font-weight: 700;
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
-.seg__btn--out.is-on { background: var(--expense-soft); color: #FCA5A5; }
-.seg__btn--in.is-on { background: var(--income-soft); color: #6EE7B7; }
-
-.emojis {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  scrollbar-width: none;
-}
-.emojis::-webkit-scrollbar { display: none; }
-.emoji {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 46px;
-  height: 46px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--deep);
-  font-size: 21px;
-  line-height: 1;
-}
-.emoji.is-on {
-  border-color: rgba(37, 99, 235, 0.75);
-  background: var(--accent-soft);
-}
+.seg__btn.is-on { background: var(--accent-soft); color: var(--accent-text); }
 
 .btn {
   min-height: 48px;
@@ -1016,7 +1009,7 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
 .toast[hidden] { display: none; }
 .toast.is-open { opacity: 1; transform: translate(-50%, 0); }
 
-/* ---------- Баннер ошибки ---------- */
+/* ---------- Баннер ---------- */
 .banner {
   display: flex;
   align-items: center;
@@ -1044,31 +1037,18 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
   text-underline-offset: 3px;
 }
 
-/* ---------- Пустые состояния ---------- */
-.empty {
-  padding: 18px 4px;
-  text-align: center;
-  font-size: var(--fs-sm);
-  color: var(--muted-2);
-}
-.empty--sm { padding: 12px 2px; font-size: var(--fs-xs); }
-
 /* ---------- Адаптив ---------- */
-@media (hover: hover) and (pointer: fine) {
-  .balance__hint { display: none; }
-}
-
 @media (max-width: 380px) {
   .app { padding-left: 12px; padding-right: 12px; }
   .brand, .screen__title { font-size: 21px; }
-  .month__label { min-width: 104px; font-size: var(--fs-xs); }
-  .month__btn { width: 42px; height: 42px; }
+  .hero__value { font-size: 30px; }
   .row { grid-template-columns: 38px minmax(0, 1fr) auto 38px; gap: 8px; }
   .row--flat { grid-template-columns: 38px minmax(0, 1fr) auto; }
-  .row__mark { width: 38px; height: 38px; }
+  .row__mark, .job__toggle { width: 38px; height: 38px; }
   .row__del { width: 38px; height: 38px; }
-  .plan__row { grid-template-columns: 38px minmax(0, 1fr) auto; }
-  .plan__row--del { grid-template-columns: 38px minmax(0, 1fr) auto 38px; }
+  .car__head { grid-template-columns: 40px minmax(0, 1fr) auto; }
+  .car__ico { width: 40px; height: 40px; font-size: 19px; }
+  .job__head { grid-template-columns: 38px minmax(0, 1fr) auto 38px; gap: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1089,53 +1069,49 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
   </div>
 
   <main>
+    <!-- ОБЗОР -->
     <section class="screen is-active" data-screen="overview" aria-label="Обзор">
       <header class="topbar">
-        <h1 class="brand">деньги<span class="brand__dot">.</span></h1>
-        <div class="month">
-          <button class="month__btn" type="button" id="prev-month" data-prev aria-label="Предыдущий месяц">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-          </button>
-          <span class="month__label" id="month-label" aria-live="polite"></span>
-          <button class="month__btn" type="button" id="next-month" data-next aria-label="Следующий месяц">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
-          </button>
-        </div>
+        <h1 class="brand">гараж<span class="brand__dot">.</span></h1>
+        <button class="icon-btn" type="button" data-add="car" aria-label="Добавить машину">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
       </header>
 
-      <section class="balance" id="ov-card" aria-label="Баланс за месяц">
-        <div class="balance__head">
-          <p class="balance__label" id="ov-period">Остаток</p>
-          <span class="balance__hint">свайп · месяц</span>
+      <section class="hero" aria-label="Сводка">
+        <div class="hero__label">
+          <span>Чистая прибыль</span>
+          <span class="hero__hint" id="ov-count">—</span>
         </div>
-        <p class="balance__value" id="ov-balance">0 ₽</p>
-        <div class="balance__stats">
+        <p class="hero__value" id="ov-profit">0&nbsp;₽</p>
+        <p class="hero__hint" id="ov-hint">появится после продажи</p>
+        <div class="hero__stats">
           <div class="stat">
-            <span class="stat__label"><i class="dot dot--in" aria-hidden="true"></i>Доходы</span>
-            <span class="stat__value stat__value--in" id="ov-income">0 ₽</span>
+            <span class="stat__label"><i class="dot dot--out" aria-hidden="true"></i>Вложено в работе</span>
+            <span class="stat__value stat__value--out" id="ov-invested">0&nbsp;₽</span>
           </div>
           <div class="stat">
-            <span class="stat__label"><i class="dot dot--out" aria-hidden="true"></i>Расходы</span>
-            <span class="stat__value stat__value--out" id="ov-expense">0 ₽</span>
+            <span class="stat__label"><i class="dot dot--in" aria-hidden="true"></i>Выручка</span>
+            <span class="stat__value stat__value--in" id="ov-revenue">0&nbsp;₽</span>
           </div>
         </div>
       </section>
 
       <section class="block">
         <div class="block__head">
-          <h2 class="block__title">Бюджеты</h2>
-          <button class="link" type="button" data-go="plans">Настроить</button>
+          <h2 class="block__title">Машины в работе</h2>
+          <button class="link" type="button" data-go="cars">Все</button>
         </div>
-        <div class="card card--flush" id="ov-budgets"></div>
+        <div class="cars" id="ov-cars"></div>
       </section>
 
       <section class="block">
-        <h2 class="block__title">Расходы по категориям</h2>
+        <h2 class="block__title">Куда ушли деньги</h2>
         <div class="card card--flush" id="ov-cats"></div>
       </section>
 
       <section class="block">
-        <h2 class="block__title">Тренд за 6 месяцев</h2>
+        <h2 class="block__title">Прибыль по месяцам</h2>
         <div class="card">
           <div class="chart" id="ov-trend"></div>
         </div>
@@ -1150,6 +1126,20 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
       </section>
     </section>
 
+    <!-- АВТО -->
+    <section class="screen" data-screen="cars" aria-label="Авто">
+      <header class="topbar">
+        <h1 class="screen__title">Авто</h1>
+        <button class="icon-btn" type="button" data-add="car" aria-label="Добавить машину">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </header>
+
+      <div class="chips" id="cars-chips" role="group" aria-label="Фильтр машин"></div>
+      <div class="cars" id="cars-list"></div>
+    </section>
+
+    <!-- ОПЕРАЦИИ -->
     <section class="screen" data-screen="ops" aria-label="Операции">
       <header class="topbar">
         <h1 class="screen__title">Операции</h1>
@@ -1162,60 +1152,35 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
         <span class="search__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
         </span>
-        <input class="search__input" id="ops-search" type="search" placeholder="Поиск по комментарию или категории" aria-label="Поиск операций" autocomplete="off">
+        <input class="search__input" id="ops-search" type="search" placeholder="Поиск по машине, категории, комментарию" aria-label="Поиск операций" autocomplete="off">
       </div>
 
       <div class="chips" id="ops-chips" role="group" aria-label="Фильтр операций"></div>
-
       <div class="card card--flush" id="ops-list"></div>
     </section>
 
-    <section class="screen" data-screen="plans" aria-label="Планы">
+    <!-- РЕМОНТ -->
+    <section class="screen" data-screen="repair" aria-label="Ремонт">
       <header class="topbar">
-        <h1 class="screen__title">Планы</h1>
+        <h1 class="screen__title">Ремонт</h1>
+        <button class="icon-btn" type="button" data-add="job" aria-label="Добавить работу">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
       </header>
 
-      <section class="block" style="margin-top:0">
-        <div class="block__head">
-          <h2 class="block__title">Бюджеты на месяц</h2>
-          <button class="add-btn" type="button" data-add="budget" aria-label="Добавить бюджет">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          </button>
-        </div>
-        <div class="card card--flush" id="plans-budgets"></div>
-      </section>
+      <div class="card" id="repair-summary"></div>
 
       <section class="block">
         <div class="block__head">
-          <h2 class="block__title">Цели</h2>
-          <button class="add-btn" type="button" data-add="goal" aria-label="Добавить цель">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          </button>
+          <h2 class="block__title">План работ</h2>
+          <button class="link" type="button" data-add="job">Добавить</button>
         </div>
-        <div id="plans-goals"></div>
-      </section>
-
-      <section class="block">
-        <div class="block__head">
-          <h2 class="block__title">Постоянные платежи</h2>
-          <button class="add-btn" type="button" data-add="recurring" aria-label="Добавить платёж">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          </button>
-        </div>
-        <div class="card card--flush" id="plans-recurring"></div>
-      </section>
-
-      <section class="block">
-        <div class="block__head">
-          <h2 class="block__title">Долги</h2>
-          <button class="add-btn" type="button" data-add="debt" aria-label="Добавить долг">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          </button>
-        </div>
-        <div id="plans-debts"></div>
+        <div class="chips" id="repair-chips" role="group" aria-label="Фильтр работ по машине"></div>
+        <div class="card card--flush" id="repair-list"></div>
       </section>
     </section>
 
+    <!-- ЕЩЁ -->
     <section class="screen" data-screen="more" aria-label="Ещё">
       <header class="topbar">
         <h1 class="screen__title">Ещё</h1>
@@ -1224,6 +1189,14 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
       <section class="block" style="margin-top:0">
         <h2 class="block__title">За всё время</h2>
         <div class="card" id="more-totals"></div>
+      </section>
+
+      <section class="block">
+        <div class="block__head">
+          <h2 class="block__title">Машины</h2>
+          <button class="link" type="button" data-add="car">Добавить</button>
+        </div>
+        <div class="card card--flush" id="more-cars"></div>
       </section>
 
       <section class="block">
@@ -1254,7 +1227,7 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
             <span class="more-row__ico" aria-hidden="true">✕</span>
             <span class="more-row__text">
               <span class="more-row__title">Удалить все данные</span>
-              <span class="more-row__sub">Операции, бюджеты, цели и долги</span>
+              <span class="more-row__sub">Машины, операции и план работ</span>
             </span>
           </button>
         </div>
@@ -1276,13 +1249,17 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
       <span>Обзор</span>
     </button>
+    <button class="tab" type="button" data-go="cars">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12l1.6-4.6A2 2 0 0 1 6.5 6h11a2 2 0 0 1 1.9 1.4L21 12"/><path d="M5 17h14M6 17l1.2-4.2A2 2 0 0 1 9.1 11h5.8a2 2 0 0 1 1.9 1.8L18 17"/><path d="M7.5 20h.01M16.5 20h.01"/></svg>
+      <span>Авто</span>
+    </button>
     <button class="tab" type="button" data-go="ops">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
       <span>Операции</span>
     </button>
-    <button class="tab" type="button" data-go="plans">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg>
-      <span>Планы</span>
+    <button class="tab" type="button" data-go="repair">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0 5 5l-8.4 8.4a2.1 2.1 0 0 1-3-3l8.4-8.4z"/><path d="M6 6l3 3"/></svg>
+      <span>Ремонт</span>
     </button>
     <button class="tab" type="button" data-go="more">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg>
@@ -1329,45 +1306,45 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
 (function () {
   'use strict';
 
-  var KEY = 'money.v2';
-  var VERSION = 3;
+  var KEY = 'garage.v1';
+  var VERSION = 1;
 
   var MONTH_NOM = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
   var MONTH_GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
   var MONTH_SHORT = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
 
-  var CAT_LIST = {
-    expense: [
-      { id: 'food', name: 'Продукты', emoji: '🛒' },
-      { id: 'cafe', name: 'Кафе', emoji: '☕' },
-      { id: 'transport', name: 'Транспорт', emoji: '🚌' },
-      { id: 'home', name: 'Жильё', emoji: '🏠' },
-      { id: 'health', name: 'Здоровье', emoji: '💊' },
-      { id: 'fun', name: 'Развлечения', emoji: '🎬' },
-      { id: 'shop', name: 'Покупки', emoji: '🛍️' },
-      { id: 'comm', name: 'Связь', emoji: '📱' },
-      { id: 'other', name: 'Прочее', emoji: '📦' }
-    ],
-    income: [
-      { id: 'salary', name: 'Зарплата', emoji: '💼' },
-      { id: 'freelance', name: 'Фриланс', emoji: '💻' },
-      { id: 'gift', name: 'Подарки', emoji: '🎁' },
-      { id: 'refund', name: 'Возврат', emoji: '↩️' },
-      { id: 'other_in', name: 'Прочее', emoji: '💰' }
-    ]
-  };
+  /* Категории трат по машине */
+  var CAT_LIST = [
+    { id: 'buy', name: 'Покупка авто', emoji: '🔑', kind: 'car' },
+    { id: 'parts', name: 'Запчасти', emoji: '⚙️', kind: 'cost' },
+    { id: 'service', name: 'Сервис и ремонт', emoji: '🔧', kind: 'cost' },
+    { id: 'wash', name: 'Мойка и химчистка', emoji: '🧽', kind: 'cost' },
+    { id: 'fuel', name: 'Топливо', emoji: '⛽', kind: 'cost' },
+    { id: 'docs', name: 'Документы и ГИБДД', emoji: '📄', kind: 'cost' },
+    { id: 'insurance', name: 'Страховка', emoji: '🛡️', kind: 'cost' },
+    { id: 'parking', name: 'Стоянка', emoji: '🅿️', kind: 'cost' },
+    { id: 'delivery', name: 'Доставка и перегон', emoji: '🚚', kind: 'cost' },
+    { id: 'fee', name: 'Комиссия площадки', emoji: '🏷️', kind: 'cost' },
+    { id: 'other', name: 'Прочее', emoji: '📦', kind: 'cost' }
+  ];
 
   var CATS = {};
-  ['expense', 'income'].forEach(function (type) {
-    CAT_LIST[type].forEach(function (cat) {
-      CATS[cat.id] = { id: cat.id, name: cat.name, emoji: cat.emoji, type: type };
-    });
+  CAT_LIST.forEach(function (cat) {
+    CATS[cat.id] = cat;
   });
+  /* Спецкатегория для дохода от продажи */
+  CATS.sale = { id: 'sale', name: 'Продажа авто', emoji: '💰', kind: 'sale' };
 
-  var EMOJIS = ['🎯', '✈️', '🏠', '🚗', '💻', '🎓', '🎁', '💍', '🏖️', '🐾'];
+  var TX_TYPES = {
+    buy: { label: 'Покупка', sign: 'expense' },
+    cost: { label: 'Трата', sign: 'expense' },
+    sale: { label: 'Продажа', sign: 'income' }
+  };
 
   var TRASH_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6.5 7l.8 12h9.4l.8-12"/></svg>';
   var PLUS_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+  var CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>';
+  var CIRCLE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg>';
 
   var el = function (id) { return document.getElementById(id); };
 
@@ -1390,6 +1367,13 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     return fmt.format(abs) + '\u00A0₽';
   }
 
+  function fmtSigned(value) {
+    var s = fmtMoney(value);
+    if (round2(value) < 0) return '−' + s;
+    if (round2(value) > 0) return '+' + s;
+    return s;
+  }
+
   function fmtInput(value) {
     var s = String(round2(value));
     return s.indexOf('.') === -1 ? s : s.replace('.', ',');
@@ -1397,13 +1381,9 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
 
   function fmtCompact(value) {
     var abs = Math.abs(value);
-    var units = [[1000000000, 'млрд'], [1000000, 'М'], [1000, 'к']];
-    for (var i = 0; i < units.length; i++) {
-      if (abs >= units[i][0] * 0.9995) {
-        var n = abs / units[i][0];
-        return n.toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + units[i][1];
-      }
-    }
+    if (abs >= 1000000) return (abs / 1000000).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + 'М';
+    if (abs >= 10000) return Math.round(abs / 1000) + 'к';
+    if (abs >= 1000) return (abs / 1000).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + 'к';
     return String(Math.round(abs));
   }
 
@@ -1429,10 +1409,7 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
   }
 
   function todayISO() { return toISO(new Date()); }
-
   function monthStart(date) { return new Date(date.getFullYear(), date.getMonth(), 1); }
-
-  function addMonths(date, count) { return new Date(date.getFullYear(), date.getMonth() + count, 1); }
 
   function sameMonth(iso, month) {
     var date = fromISO(iso);
@@ -1464,16 +1441,22 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     return base;
   }
 
+  function shortDate(iso) {
+    var date = fromISO(iso);
+    if (!date) return '';
+    return date.getDate() + ' ' + MONTH_GEN[date.getMonth()];
+  }
+
   function newId() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
 
   function emptyState() {
-    return { tx: [], budgets: {}, goals: [], recurring: [], debts: [] };
+    return { cars: [], tx: [], jobs: [] };
   }
 
   var state = emptyState();
-  var view = { screen: 'overview', month: monthStart(new Date()), query: '', filter: 'all' };
+  var view = { screen: 'overview', carFilter: 'all', opsFilter: 'all', repairCar: 'all', query: '' };
   var storageProblem = '';
   var toastTimer = 0;
 
@@ -1481,68 +1464,55 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     var out = emptyState();
     if (!raw || typeof raw !== 'object') return out;
 
-    var list = Array.isArray(raw.tx) ? raw.tx : (Array.isArray(raw.items) ? raw.items : []);
-    list.forEach(function (item) {
+    var carIds = {};
+
+    (Array.isArray(raw.cars) ? raw.cars : []).forEach(function (car) {
+      if (!car || typeof car !== 'object') return;
+      var name = String(car.name || '').trim().slice(0, 60);
+      if (!name) return;
+      var id = String(car.id || newId());
+      carIds[id] = true;
+      out.cars.push({
+        id: id,
+        name: name,
+        plate: String(car.plate || '').trim().slice(0, 16),
+        year: String(car.year || '').trim().slice(0, 4),
+        status: car.status === 'sold' ? 'sold' : 'work',
+        created: fromISO(car.created) ? car.created : todayISO()
+      });
+    });
+
+    /* Если машин нет, но есть операции — создаём «Без машины», чтобы данные не потерялись */
+    var orphanCat = false;
+
+    (Array.isArray(raw.tx) ? raw.tx : []).forEach(function (item) {
       if (!item || typeof item !== 'object') return;
-      var type = (item.type || item.kind) === 'income' ? 'income' : 'expense';
       var amount = round2(Math.abs(Number(item.amount)));
       if (!isFinite(amount) || amount <= 0) return;
-      var date = fromISO(item.date) ? item.date : (item.createdAt ? toISO(new Date(item.createdAt)) : null);
+      var date = fromISO(item.date) ? item.date : null;
       if (!date) return;
-      var rawCat = typeof item.cat === 'string' ? item.cat : item.category;
-      var cat = typeof rawCat === 'string' && CATS[rawCat] ? rawCat : '';
-      if (!cat || CATS[cat].type !== type) cat = type === 'income' ? 'other_in' : 'other';
-      var note = String(item.note || item.title || '').replace(/\s+/g, ' ').trim().slice(0, 80);
-      out.tx.push({ id: String(item.id || newId()), date: date, type: type, cat: cat, note: note, amount: amount });
+      var cat = typeof item.cat === 'string' && CATS[item.cat] ? item.cat : 'other';
+      var carId = String(item.carId || '');
+      if (!carIds[carId]) { carId = ''; orphanCat = true; }
+      var note = String(item.note || '').replace(/\s+/g, ' ').trim().slice(0, 100);
+      out.tx.push({ id: String(item.id || newId()), carId: carId, date: date, cat: cat, note: note, amount: amount });
     });
-    out.tx.reverse();
 
-    if (raw.budgets && typeof raw.budgets === 'object') {
-      Object.keys(raw.budgets).forEach(function (cat) {
-        var limit = round2(Number(raw.budgets[cat]));
-        if (CATS[cat] && CATS[cat].type === 'expense' && isFinite(limit) && limit > 0) out.budgets[cat] = limit;
-      });
+    if (orphanCat) {
+      var fallback = { id: 'no-car', name: 'Без машины', plate: '', year: '', status: 'work', created: todayISO() };
+      out.cars.push(fallback);
+      out.tx.forEach(function (tx) { if (!tx.carId) tx.carId = 'no-car'; });
     }
 
-    (Array.isArray(raw.goals) ? raw.goals : []).forEach(function (goal) {
-      if (!goal || typeof goal !== 'object') return;
-      var target = round2(Number(goal.target));
-      if (!isFinite(target) || target <= 0) return;
-      var saved = round2(Number(goal.saved));
-      if (!isFinite(saved) || saved < 0) saved = 0;
-      out.goals.push({
-        id: String(goal.id || newId()),
-        title: String(goal.title || 'Цель').trim().slice(0, 40) || 'Цель',
-        emoji: String(goal.emoji || '🎯').slice(0, 4),
-        target: target,
-        saved: saved
-      });
-    });
-
-    (Array.isArray(raw.recurring) ? raw.recurring : []).forEach(function (item) {
-      if (!item || typeof item !== 'object') return;
-      var amount = round2(Number(item.amount));
-      var day = parseInt(item.day, 10);
-      if (!isFinite(amount) || amount <= 0 || !day || day < 1 || day > 31) return;
-      out.recurring.push({
-        id: String(item.id || newId()),
-        title: String(item.title || 'Платёж').trim().slice(0, 40) || 'Платёж',
-        day: day,
-        amount: amount
-      });
-    });
-
-    (Array.isArray(raw.debts) ? raw.debts : []).forEach(function (item) {
-      if (!item || typeof item !== 'object') return;
-      var amount = round2(Number(item.amount));
-      if (!isFinite(amount) || amount <= 0) return;
-      out.debts.push({
-        id: String(item.id || newId()),
-        name: String(item.name || item.title || 'Долг').trim().slice(0, 40) || 'Долг',
-        amount: amount,
-        due: fromISO(item.due) ? item.due : '',
-        direction: item.direction === 'owe' ? 'owe' : 'owed'
-      });
+    (Array.isArray(raw.jobs) ? raw.jobs : []).forEach(function (job) {
+      if (!job || typeof job !== 'object') return;
+      var title = String(job.title || '').trim().slice(0, 60);
+      if (!title) return;
+      var carId = String(job.carId || '');
+      if (!carIds[carId] && carId !== 'no-car') carId = '';
+      var estimate = round2(Number(job.estimate));
+      if (!isFinite(estimate) || estimate < 0) estimate = 0;
+      out.jobs.push({ id: String(job.id || newId()), carId: carId, title: title, estimate: estimate, done: !!job.done });
     });
 
     return out;
@@ -1556,11 +1526,9 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     try {
       localStorage.setItem(KEY, JSON.stringify({
         version: VERSION,
+        cars: state.cars,
         tx: state.tx,
-        budgets: state.budgets,
-        goals: state.goals,
-        recurring: state.recurring,
-        debts: state.debts
+        jobs: state.jobs
       }));
       return true;
     } catch (err) {
@@ -1586,12 +1554,20 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
       return;
     }
     state = normalize(parsed);
-    if (parsed && parsed.version !== VERSION) save();
   }
 
   function commit() {
     save();
     renderAll();
+  }
+
+  /* ---------- Вычисления ---------- */
+
+  function carById(id) {
+    for (var i = 0; i < state.cars.length; i++) {
+      if (state.cars[i].id === id) return state.cars[i];
+    }
+    return null;
   }
 
   function txById(id) {
@@ -1601,26 +1577,92 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     return null;
   }
 
-  function txOfMonth(month) {
-    return state.tx.filter(function (tx) { return sameMonth(tx.date, month); });
+  function jobById(id) {
+    for (var i = 0; i < state.jobs.length; i++) {
+      if (state.jobs[i].id === id) return state.jobs[i];
+    }
+    return null;
   }
 
-  function totals(list) {
-    var income = 0;
-    var expense = 0;
-    list.forEach(function (tx) {
-      if (tx.type === 'income') income += tx.amount;
-      else expense += tx.amount;
+  function isSale(tx) { return CATS[tx.cat] && CATS[tx.cat].kind === 'sale'; }
+  function isBuy(tx) { return CATS[tx.cat] && CATS[tx.cat].kind === 'car'; }
+
+  /* Финансы одной машины */
+  function carStats(carId) {
+    var buy = 0;
+    var costs = 0;
+    var sale = 0;
+    var saleDate = '';
+    var firstDate = '';
+    state.tx.forEach(function (tx) {
+      if (tx.carId !== carId) return;
+      if (!firstDate || tx.date < firstDate) firstDate = tx.date;
+      if (isSale(tx)) {
+        sale += tx.amount;
+        if (!saleDate || tx.date > saleDate) saleDate = tx.date;
+      } else if (isBuy(tx)) {
+        buy += tx.amount;
+      } else {
+        costs += tx.amount;
+      }
     });
-    income = round2(income);
-    expense = round2(expense);
-    return { income: income, expense: expense, balance: round2(income - expense) };
+    buy = round2(buy);
+    costs = round2(costs);
+    sale = round2(sale);
+    var invested = round2(buy + costs);
+    var sold = sale > 0;
+    var profit = sold ? round2(sale - invested) : 0;
+    var margin = sold && sale > 0 ? Math.round(profit / sale * 100) : 0;
+    return {
+      buy: buy,
+      costs: costs,
+      sale: sale,
+      invested: invested,
+      sold: sold,
+      profit: profit,
+      margin: margin,
+      saleDate: saleDate,
+      firstDate: firstDate
+    };
   }
 
-  function spentByCat(month) {
+  function allStats() {
+    var res = {
+      buy: 0, costs: 0, sale: 0,
+      invested: 0,        // всё вложено (покупка + траты) по всем машинам
+      investedWork: 0,    // вложено в непроданные
+      investedSold: 0,    // вложено в проданные
+      profit: 0,          // только по проданным
+      revenue: 0,
+      inWork: 0, sold: 0
+    };
+    state.cars.forEach(function (car) {
+      var s = carStats(car.id);
+      res.buy += s.buy;
+      res.costs += s.costs;
+      res.sale += s.sale;
+      res.invested += s.invested;
+      if (s.sold) {
+        res.sold++;
+        res.investedSold += s.invested;
+        res.profit += s.profit;
+        res.revenue += s.sale;
+      } else {
+        res.inWork++;
+        res.investedWork += s.invested;
+      }
+    });
+    ['buy', 'costs', 'sale', 'invested', 'investedWork', 'investedSold', 'profit', 'revenue'].forEach(function (k) {
+      res[k] = round2(res[k]);
+    });
+    return res;
+  }
+
+  function spentByCat(carId) {
     var map = {};
-    txOfMonth(month).forEach(function (tx) {
-      if (tx.type !== 'expense') return;
+    state.tx.forEach(function (tx) {
+      if (isSale(tx)) return;
+      if (carId && tx.carId !== carId) return;
       map[tx.cat] = round2((map[tx.cat] || 0) + tx.amount);
     });
     return map;
@@ -1631,100 +1673,126 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     return a.date < b.date ? 1 : -1;
   }
 
-  function barMod(ratio) {
-    if (ratio >= 1) return ' bar__fill--over';
-    if (ratio >= 0.8) return ' bar__fill--warn';
-    return '';
+  function carTitle(car) {
+    if (!car) return 'Без машины';
+    return car.name;
   }
 
-  function rowHtml(tx, options) {
-    var cat = CATS[tx.cat] || CATS.other;
-    var flat = options && options.flat;
-    var title = tx.note || cat.name;
-    var meta = tx.note ? cat.name : (tx.type === 'income' ? 'Доход' : 'Расход');
-    var sign = tx.type === 'income' ? '+' : '−';
-    return '<div class="row' + (flat ? ' row--flat' : '') + '">' +
-      '<span class="row__mark row__mark--' + tx.type + '" aria-hidden="true">' + cat.emoji + '</span>' +
-      '<button class="row__main" type="button" data-edit="' + esc(tx.id) + '">' +
-        '<span class="row__title">' + esc(title) + '</span>' +
-        '<span class="row__meta">' + esc(meta) + '</span>' +
-      '</button>' +
-      '<span class="row__amount row__amount--' + tx.type + '">' + sign + fmtMoney(tx.amount) + '</span>' +
-      (flat ? '' : '<button class="row__del" type="button" data-del="' + esc(tx.id) + '" aria-label="Удалить: ' + esc(title) + '">' + TRASH_SVG + '</button>') +
+  function carSub(car) {
+    if (!car) return '';
+    var parts = [];
+    if (car.year) parts.push(car.year);
+    if (car.plate) parts.push(car.plate);
+    return parts.join(' · ');
+  }
+
+  function carCardHtml(car, options) {
+    var s = carStats(car.id);
+    var opts = options || {};
+    var cls = 'car';
+    if (s.sold) cls += ' car--sold';
+
+    var statusHtml = s.sold
+      ? '<span class="car__status car__status--sold">Продана</span>'
+      : '<span class="car__status car__status--work">В работе</span>';
+
+    var profitBlock = '';
+    if (s.sold) {
+      profitBlock = '<div class="car__profit' + (s.profit < 0 ? ' car__profit--loss' : '') + '">' +
+          '<span class="car__profit-label">Чистая прибыль</span>' +
+          '<span class="car__profit-value car__profit-value--' + (s.profit < 0 ? 'out' : 'in') + '">' + fmtSigned(s.profit) + '</span>' +
+        '</div>';
+    } else {
+      profitBlock = '<div class="car__profit car__profit--work">' +
+          '<span class="car__profit-label">Вложено, ещё не продана</span>' +
+          '<span class="car__profit-value car__profit-value--work">' + fmtMoney(s.invested) + '</span>' +
+        '</div>';
+    }
+
+    var actions = opts.compact ? '' :
+      '<div class="car__actions">' +
+        '<button class="link" type="button" data-car-open="' + esc(car.id) + '">Операции</button>' +
+        '<button class="link" type="button" data-car-edit="' + esc(car.id) + '">Изменить</button>' +
+        '<button class="link link--danger" type="button" data-car-del="' + esc(car.id) + '">Удалить</button>' +
       '</div>';
+
+    return '<article class="' + cls + '" data-car-card="' + esc(car.id) + '">' +
+      '<div class="car__head">' +
+        '<span class="car__ico" aria-hidden="true">🚗</span>' +
+        '<button class="row__main" type="button" data-car-open="' + esc(car.id) + '" style="min-width:0">' +
+          '<span class="car__name">' + esc(carTitle(car)) + '</span>' +
+          '<span class="car__sub">' + esc(carSub(car) || (s.sold ? 'Продана ' + shortDate(s.saleDate) : 'Куплена ' + shortDate(s.firstDate))) + '</span>' +
+        '</button>' +
+        statusHtml +
+      '</div>' +
+      '<div class="car__money">' +
+        '<div class="car__cell"><span class="car__cell-label">Покупка</span><span class="car__cell-value">' + fmtMoney(s.buy) + '</span></div>' +
+        '<div class="car__cell"><span class="car__cell-label">Траты</span><span class="car__cell-value car__cell-value--out">' + fmtMoney(s.costs) + '</span></div>' +
+        '<div class="car__cell"><span class="car__cell-label">' + (s.sold ? 'Продажа' : 'Вложено') + '</span><span class="car__cell-value ' + (s.sold ? 'car__cell-value--in' : '') + '">' + fmtMoney(s.sold ? s.sale : s.invested) + '</span></div>' +
+      '</div>' +
+      profitBlock +
+      actions +
+    '</article>';
   }
 
   function renderOverview() {
-    var month = view.month;
-    var list = txOfMonth(month);
-    var sum = totals(list);
+    var sum = allStats();
+    var profitEl = el('ov-profit');
+    profitEl.textContent = fmtSigned(sum.profit);
+    profitEl.classList.toggle('is-negative', sum.profit < 0);
+    el('ov-invested').textContent = fmtMoney(sum.investedWork);
+    el('ov-revenue').textContent = fmtMoney(sum.revenue);
 
-    el('month-label').textContent = MONTH_NOM[month.getMonth()] + ' ' + month.getFullYear();
-    el('ov-period').textContent = 'Остаток · ' + MONTH_NOM[month.getMonth()];
-    el('ov-income').textContent = fmtMoney(sum.income);
-    el('ov-expense').textContent = fmtMoney(sum.expense);
-
-    var balance = el('ov-balance');
-    balance.textContent = (sum.balance < 0 ? '−' : '') + fmtMoney(sum.balance);
-    balance.classList.toggle('is-negative', sum.balance < 0);
-
-    var current = monthStart(new Date());
-    el('next-month').disabled = month.getTime() >= current.getTime();
-
-    renderBudgetsPreview(month);
-    renderCategories(month);
-    renderTrend(month);
-    renderLatest(month);
-  }
-
-  function renderBudgetsPreview(month) {
-    var box = el('ov-budgets');
-    var ids = Object.keys(state.budgets);
-    if (!ids.length) {
-      box.innerHTML = '<p class="empty empty--sm">Лимитов пока нет. Добавьте бюджет в разделе «Планы».</p>';
-      return;
+    var hintEl = el('ov-hint');
+    if (hintEl) {
+      hintEl.textContent = sum.sold
+        ? 'прибыль по ' + sum.sold + ' ' + plural(sum.sold, ['машине', 'машинам', 'машинам'])
+        : 'появится после продажи';
     }
-    var spent = spentByCat(month);
-    ids.sort(function (a, b) { return state.budgets[b] - state.budgets[a]; });
-    box.innerHTML = ids.map(function (id) {
-      var cat = CATS[id];
-      if (!cat) return '';
-      var limit = state.budgets[id];
-      var used = spent[id] || 0;
-      var ratio = limit > 0 ? used / limit : 0;
-      var pct = Math.round(ratio * 100);
-      var overflow = ratio >= 1;
-      return '<div class="brow' + (overflow ? ' is-over' : (ratio >= 0.8 ? ' is-warn' : '')) + '">' +
-        '<div class="brow__top">' +
-          '<span class="brow__name">' + cat.emoji + ' ' + esc(cat.name) + '</span>' +
-          '<span class="brow__pct">' + pct + '%</span>' +
-        '</div>' +
-        '<div class="bar"><div class="bar__fill' + barMod(ratio) + '" style="width:' + Math.min(100, Math.max(0, pct)) + '%"></div></div>' +
-        '<p class="brow__note">' + fmtMoney(used) + ' из ' + fmtMoney(limit) +
-          (overflow ? ' · перерасход ' + fmtMoney(used - limit) : '') + '</p>' +
-      '</div>';
-    }).join('');
+
+    var parts = [];
+    if (sum.inWork) parts.push(sum.inWork + ' в работе');
+    if (sum.sold) parts.push(sum.sold + ' продано');
+    el('ov-count').textContent = parts.length ? parts.join(' · ') : 'Пока пусто';
+
+    renderOverviewCars();
+    renderOverviewCats();
+    renderTrend();
+    renderLatest();
   }
 
-  function renderCategories(month) {
-    var box = el('ov-cats');
-    var list = txOfMonth(month).filter(function (tx) { return tx.type === 'expense'; });
+  function renderOverviewCars() {
+    var box = el('ov-cars');
+    var list = state.cars.filter(function (car) {
+      return !carStats(car.id).sold;
+    }).slice(0, 3);
+
     if (!list.length) {
-      box.innerHTML = '<p class="empty empty--sm">В этом месяце расходов ещё нет.</p>';
+      if (state.cars.length) {
+        box.innerHTML = '<div class="card"><p class="empty empty--sm">Все машины проданы. Добавьте следующую — кнопка «+» в разделе «Авто».</p></div>';
+      } else {
+        box.innerHTML = '<div class="card"><p class="empty empty--sm">Машин пока нет. Добавьте первую — кнопка «+» в разделе «Авто».</p></div>';
+      }
       return;
     }
-    var map = {};
+    box.innerHTML = list.map(function (car) { return carCardHtml(car, { compact: true }); }).join('');
+  }
+
+  function renderOverviewCats() {
+    var box = el('ov-cats');
+    var map = spentByCat('');
+    var ids = Object.keys(map);
+    if (!ids.length) {
+      box.innerHTML = '<p class="empty empty--sm">Трат пока нет. Добавьте операцию — кнопка «+» внизу.</p>';
+      return;
+    }
     var total = 0;
-    list.forEach(function (tx) {
-      map[tx.cat] = (map[tx.cat] || 0) + tx.amount;
-      total += tx.amount;
-    });
-    var rows = Object.keys(map).map(function (id) {
-      return { cat: CATS[id], sum: map[id] };
+    ids.forEach(function (id) { total += map[id]; });
+    var rows = ids.map(function (id) {
+      return { cat: CATS[id] || CATS.other, sum: map[id] };
     }).sort(function (a, b) { return b.sum - a.sum; });
 
     box.innerHTML = rows.map(function (row) {
-      if (!row.cat) return '';
       var pct = total > 0 ? Math.round(row.sum / total * 100) : 0;
       return '<div class="crow">' +
         '<div class="crow__top">' +
@@ -1736,44 +1804,119 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     }).join('');
   }
 
-  function renderTrend(month) {
+  function renderTrend() {
     var box = el('ov-trend');
+    var today = new Date();
+    var base = monthStart(today);
     var months = [];
     var max = 0;
     for (var i = 5; i >= 0; i--) {
-      var date = addMonths(month, -i);
-      var sum = 0;
-      state.tx.forEach(function (tx) {
-        if (tx.type === 'expense' && sameMonth(tx.date, date)) sum += tx.amount;
+      var date = new Date(base.getFullYear(), base.getMonth() - i, 1);
+      var profit = 0;
+      state.cars.forEach(function (car) {
+        var s = carStats(car.id);
+        if (s.sold && s.saleDate && sameMonth(s.saleDate, date)) profit += s.profit;
       });
-      sum = round2(sum);
-      if (sum > max) max = sum;
-      months.push({ date: date, sum: sum });
+      profit = round2(profit);
+      if (Math.abs(profit) > max) max = Math.abs(profit);
+      months.push({ date: date, profit: profit });
     }
+
     box.innerHTML = months.map(function (item) {
-      var isCurrent = item.date.getTime() === month.getTime();
-      var height = max > 0 ? Math.max(4, Math.round(item.sum / max * 92)) : 4;
-      var label = MONTH_NOM[item.date.getMonth()] + ' ' + item.date.getFullYear() + ': ' + fmtMoney(item.sum);
+      var isCurrent = item.date.getTime() === base.getTime();
+      var h = max > 0 ? Math.max(4, Math.round(Math.abs(item.profit) / max * 92)) : 4;
+      var label = MONTH_NOM[item.date.getMonth()] + ' ' + item.date.getFullYear() + ': ' + fmtSigned(item.profit);
       return '<div class="col' + (isCurrent ? ' is-current' : '') + '" title="' + esc(label) + '">' +
-        '<span class="col__value">' + (item.sum > 0 ? fmtCompact(item.sum) : '—') + '</span>' +
-        '<span class="col__bar" style="height:' + height + 'px"></span>' +
+        '<span class="col__value">' + (item.profit !== 0 ? fmtCompact(item.profit) : '—') + '</span>' +
+        '<span class="col__bar" style="height:' + h + 'px' + (item.profit < 0 ? ';background:var(--expense)' : '') + '"></span>' +
         '<span class="col__label">' + MONTH_SHORT[item.date.getMonth()] + '</span>' +
       '</div>';
     }).join('');
   }
 
-  function renderLatest(month) {
+  function rowHtml(tx, options) {
+    var cat = CATS[tx.cat] || CATS.other;
+    var flat = options && options.flat;
+    var car = carById(tx.carId);
+    var income = isSale(tx);
+    var title = tx.note || cat.name;
+    var metaParts = [];
+    if (!tx.note) metaParts.push(carTitle(car));
+    else metaParts.push(cat.name);
+    if (tx.note) metaParts.push(carTitle(car));
+    var meta = metaParts.filter(Boolean).join(' · ');
+
+    return '<div class="row' + (flat ? ' row--flat' : '') + '">' +
+      '<span class="row__mark" aria-hidden="true">' + cat.emoji + '</span>' +
+      '<button class="row__main" type="button" data-edit="' + esc(tx.id) + '">' +
+        '<span class="row__title">' + esc(title) + '</span>' +
+        '<span class="row__meta">' + esc(meta) + '</span>' +
+      '</button>' +
+      '<span class="row__amount row__amount--' + (income ? 'income' : 'expense') + '">' + (income ? '+' : '−') + fmtMoney(tx.amount) + '</span>' +
+      (flat ? '' : '<button class="row__del" type="button" data-del="' + esc(tx.id) + '" aria-label="Удалить: ' + esc(title) + '">' + TRASH_SVG + '</button>') +
+    '</div>';
+  }
+
+  function renderLatest() {
     var box = el('ov-last');
-    var list = txOfMonth(month).slice().sort(sortByDateDesc).slice(0, 6);
+    var list = state.tx.slice().sort(sortByDateDesc).slice(0, 6);
     if (!list.length) {
-      box.innerHTML = '<p class="empty empty--sm">В этом месяце операций ещё нет.</p>';
+      box.innerHTML = '<p class="empty empty--sm">Операций пока нет.</p>';
       return;
     }
     box.innerHTML = list.map(function (tx) { return rowHtml(tx, { flat: true }); }).join('');
   }
 
+  /* ---------- Экран «Авто» ---------- */
+  function renderCars() {
+    renderCarsChips();
+    var box = el('cars-list');
+    if (!state.cars.length) {
+      box.innerHTML = '<div class="card"><p class="empty">Машин пока нет.<br>Нажмите «+» вверху, чтобы добавить первую.</p></div>';
+      return;
+    }
+    var list = state.cars.filter(function (car) {
+      var s = carStats(car.id);
+      if (view.carFilter === 'work') return !s.sold;
+      if (view.carFilter === 'sold') return s.sold;
+      return true;
+    });
+    if (!list.length) {
+      box.innerHTML = '<div class="card"><p class="empty">В этой группе машин нет.</p></div>';
+      return;
+    }
+    /* В работе — первыми, затем по дате добавления */
+    list = list.slice().sort(function (a, b) {
+      var sa = carStats(a.id);
+      var sb = carStats(b.id);
+      if (sa.sold !== sb.sold) return sa.sold ? 1 : -1;
+      return a.created < b.created ? 1 : -1;
+    });
+    box.innerHTML = list.map(function (car) { return carCardHtml(car); }).join('');
+  }
+
+  function renderCarsChips() {
+    var box = el('cars-chips');
+    var work = 0;
+    var sold = 0;
+    state.cars.forEach(function (car) {
+      if (carStats(car.id).sold) sold++;
+      else work++;
+    });
+    var chips = [
+      { id: 'all', label: 'Все · ' + state.cars.length },
+      { id: 'work', label: 'В работе · ' + work },
+      { id: 'sold', label: 'Проданы · ' + sold }
+    ];
+    box.innerHTML = chips.map(function (chip) {
+      var on = view.carFilter === chip.id;
+      return '<button class="chip' + (on ? ' is-on' : '') + '" type="button" data-car-chip="' + chip.id + '" aria-pressed="' + on + '">' + esc(chip.label) + '</button>';
+    }).join('');
+  }
+
+  /* ---------- Экран «Операции» ---------- */
   function renderOps() {
-    renderChips();
+    renderOpsChips();
     var box = el('ops-list');
     var list = applyOpsFilter(state.tx.slice().sort(sortByDateDesc));
 
@@ -1799,7 +1942,7 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     box.innerHTML = groups.map(function (group) {
       var daySum = 0;
       group.items.forEach(function (tx) {
-        daySum += tx.type === 'income' ? tx.amount : -tx.amount;
+        daySum += isSale(tx) ? tx.amount : -tx.amount;
       });
       daySum = round2(daySum);
       var sumHtml = daySum === 0
@@ -1813,222 +1956,183 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     }).join('');
   }
 
-  function renderChips() {
+  function renderOpsChips() {
     var box = el('ops-chips');
     var chips = [
       { id: 'all', label: 'Все' },
-      { id: 'expense', label: 'Расходы' },
-      { id: 'income', label: 'Доходы' }
+      { id: 'sale', label: '💰 Продажи' },
+      { id: 'cost', label: 'Траты' }
     ];
-    var counts = {};
-    state.tx.forEach(function (tx) { counts[tx.cat] = (counts[tx.cat] || 0) + 1; });
-    Object.keys(counts).map(function (id) {
-      return { cat: CATS[id], count: counts[id] };
-    }).filter(function (item) { return !!item.cat; })
-      .sort(function (a, b) { return b.count - a.count; })
-      .forEach(function (item) {
-        chips.push({ id: 'cat:' + item.cat.id, label: item.cat.emoji + ' ' + item.cat.name });
-      });
-
+    state.cars.forEach(function (car) {
+      var count = state.tx.filter(function (tx) { return tx.carId === car.id; }).length;
+      if (!count) return;
+      chips.push({ id: 'car:' + car.id, label: '🚗 ' + carTitle(car) });
+    });
     box.innerHTML = chips.map(function (chip) {
-      var on = view.filter === chip.id;
-      return '<button class="chip' + (on ? ' is-on' : '') + '" type="button" data-chip="' + esc(chip.id) + '" aria-pressed="' + on + '">' + esc(chip.label) + '</button>';
+      var on = view.opsFilter === chip.id;
+      return '<button class="chip' + (on ? ' is-on' : '') + '" type="button" data-ops-chip="' + esc(chip.id) + '" aria-pressed="' + on + '">' + esc(chip.label) + '</button>';
     }).join('');
   }
 
   function applyOpsFilter(list) {
-    var filter = view.filter;
-    if (filter === 'expense' || filter === 'income') {
-      list = list.filter(function (tx) { return tx.type === filter; });
-    } else if (filter.indexOf('cat:') === 0) {
-      var cat = filter.slice(4);
-      list = list.filter(function (tx) { return tx.cat === cat; });
+    var filter = view.opsFilter;
+    if (filter === 'sale') {
+      list = list.filter(isSale);
+    } else if (filter === 'cost') {
+      list = list.filter(function (tx) { return !isSale(tx); });
+    } else if (filter.indexOf('car:') === 0) {
+      var carId = filter.slice(4);
+      list = list.filter(function (tx) { return tx.carId === carId; });
     }
     var query = view.query.trim().toLowerCase();
     if (query) {
       list = list.filter(function (tx) {
-        var category = CATS[tx.cat];
-        var inNote = tx.note.toLowerCase().indexOf(query) !== -1;
-        var inCat = category ? category.name.toLowerCase().indexOf(query) !== -1 : false;
-        return inNote || inCat;
+        var cat = CATS[tx.cat];
+        var car = carById(tx.carId);
+        var haystack = [
+          tx.note,
+          cat ? cat.name : '',
+          carTitle(car),
+          car ? car.plate : '',
+          car ? car.year : ''
+        ].join(' ').toLowerCase();
+        return haystack.indexOf(query) !== -1;
       });
     }
     return list;
   }
 
-  function nextCharge(day) {
-    var today = new Date();
-    var year = today.getFullYear();
-    var month = today.getMonth();
-    var lastDay = new Date(year, month + 1, 0).getDate();
-    var date = new Date(year, month, Math.min(day, lastDay));
-    if (diffDays(today, date) < 0) {
-      var nextMonth = new Date(year, month + 1, 1);
-      lastDay = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate();
-      date = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), Math.min(day, lastDay));
-    }
-    return date;
+  /* ---------- Экран «Ремонт» ---------- */
+  function renderRepair() {
+    renderRepairSummary();
+    renderRepairChips();
+    renderRepairList();
   }
 
-  function chargeLabel(day) {
-    var days = diffDays(new Date(), nextCharge(day));
-    if (days === 0) return 'сегодня';
-    if (days === 1) return 'завтра';
-    return 'через ' + days + ' ' + plural(days, ['день', 'дня', 'дней']);
-  }
-
-  function dueLabel(iso) {
-    var date = fromISO(iso);
-    if (!date) return 'без даты';
-    var days = diffDays(new Date(), date);
-    if (days < 0) {
-      var late = Math.abs(days);
-      return 'просрочен на ' + late + ' ' + plural(late, ['день', 'дня', 'дней']);
-    }
-    if (days === 0) return 'вернуть сегодня';
-    return 'до ' + date.getDate() + ' ' + MONTH_GEN[date.getMonth()];
-  }
-
-  function renderPlans() {
-    renderPlansBudgets();
-    renderPlansGoals();
-    renderPlansRecurring();
-    renderPlansDebts();
-  }
-
-  function renderPlansBudgets() {
-    var box = el('plans-budgets');
-    var ids = Object.keys(state.budgets);
-    if (!ids.length) {
-      box.innerHTML = '<p class="empty empty--sm">Лимитов нет. Нажмите «+», чтобы задать бюджет на категорию.</p>';
+  function renderRepairSummary() {
+    var box = el('repair-summary');
+    var jobs = state.jobs;
+    if (!jobs.length) {
+      box.innerHTML = '<p class="empty empty--sm">План работ пуст. Добавьте, что нужно сделать по машине — и держите стоимость под контролем.</p>';
       return;
     }
-    var spent = spentByCat(monthStart(new Date()));
-    ids.sort(function (a, b) { return state.budgets[b] - state.budgets[a]; });
-    box.innerHTML = ids.map(function (id) {
-      var cat = CATS[id];
-      if (!cat) return '';
-      var limit = state.budgets[id];
-      var used = spent[id] || 0;
-      return '<div class="plan">' +
-        '<div class="plan__row">' +
-          '<span class="row__mark" aria-hidden="true">' + cat.emoji + '</span>' +
-          '<div class="plan__main">' +
-            '<span class="plan__title">' + esc(cat.name) + '</span>' +
-            '<span class="plan__meta">' + fmtMoney(used) + ' из ' + fmtMoney(limit) + ' в этом месяце</span>' +
-          '</div>' +
-        '</div>' +
-        '<div class="plan__actions">' +
-          '<button class="link" type="button" data-budget-edit="' + esc(id) + '">Изменить</button>' +
-          '<button class="link link--danger" type="button" data-budget-del="' + esc(id) + '">Убрать</button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-  }
-
-  function renderPlansGoals() {
-    var box = el('plans-goals');
-    if (!state.goals.length) {
-      box.innerHTML = '<div class="card"><p class="empty empty--sm">Целей нет. Добавьте цель и откладывайте на неё.</p></div>';
-      return;
-    }
-    box.innerHTML = state.goals.map(function (goal) {
-      var pct = goal.target > 0 ? Math.round(goal.saved / goal.target * 100) : 0;
-      var barPct = Math.min(100, Math.max(0, pct));
-      return '<div class="card goal">' +
-        '<div class="goal__head">' +
-          '<span class="goal__emoji" aria-hidden="true">' + esc(goal.emoji) + '</span>' +
-          '<div class="goal__text">' +
-            '<p class="goal__title">' + esc(goal.title) + '</p>' +
-            '<p class="goal__meta">' + fmtMoney(goal.saved) + ' из ' + fmtMoney(goal.target) + '</p>' +
-          '</div>' +
-          '<button class="row__del" type="button" data-goal-del="' + esc(goal.id) + '" aria-label="Удалить цель: ' + esc(goal.title) + '">' + TRASH_SVG + '</button>' +
-        '</div>' +
-        '<div class="bar"><div class="bar__fill bar__fill--income" style="width:' + barPct + '%"></div></div>' +
-        '<div class="goal__foot">' +
-          '<span class="goal__pct">' + pct + '%</span>' +
-          '<button class="btn btn--ghost btn--sm" type="button" data-goal-add="' + esc(goal.id) + '">Отложить</button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-  }
-
-  function renderPlansRecurring() {
-    var box = el('plans-recurring');
-    if (!state.recurring.length) {
-      box.innerHTML = '<p class="empty empty--sm">Платежей нет. Добавьте аренду, подписки и другие регулярные списания.</p>';
-      return;
-    }
-    var list = state.recurring.slice().sort(function (a, b) { return a.day - b.day; });
-    box.innerHTML = list.map(function (item) {
-      return '<div class="plan">' +
-        '<div class="plan__row plan__row--del">' +
-          '<span class="row__mark" aria-hidden="true">🔁</span>' +
-          '<div class="plan__main">' +
-            '<span class="plan__title">' + esc(item.title) + '</span>' +
-            '<span class="plan__meta">' + item.day + ' числа · ' + chargeLabel(item.day) + '</span>' +
-          '</div>' +
-          '<span class="plan__amount">' + fmtMoney(item.amount) + '</span>' +
-          '<button class="row__del" type="button" data-rec-del="' + esc(item.id) + '" aria-label="Удалить платёж: ' + esc(item.title) + '">' + TRASH_SVG + '</button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-  }
-
-  function renderPlansDebts() {
-    var box = el('plans-debts');
-    var owed = state.debts.filter(function (item) { return item.direction === 'owed'; });
-    var owe = state.debts.filter(function (item) { return item.direction === 'owe'; });
-    box.innerHTML = debtGroupHtml('Мне должны', 'owed', owed) + debtGroupHtml('Я должен', 'owe', owe);
-  }
-
-  function debtGroupHtml(title, direction, list) {
     var total = 0;
-    list.forEach(function (item) { total += item.amount; });
-    var rows = list.map(function (item) {
-      var due = dueLabel(item.due);
-      var late = item.due && diffDays(new Date(), fromISO(item.due)) < 0;
-      return '<div class="plan">' +
-        '<div class="plan__row plan__row--del">' +
-          '<span class="row__mark" aria-hidden="true">' + (direction === 'owed' ? '🤝' : '💸') + '</span>' +
-          '<div class="plan__main">' +
-            '<span class="plan__title">' + esc(item.name) + '</span>' +
-            '<span class="plan__meta"' + (late ? ' style="color:#FCA5A5"' : '') + '>' + esc(due) + '</span>' +
+    var left = 0;
+    var doneSum = 0;
+    jobs.forEach(function (job) {
+      total += job.estimate;
+      if (job.done) doneSum += job.estimate;
+      else left += job.estimate;
+    });
+    var pct = total > 0 ? Math.round(doneSum / total * 100) : 0;
+
+    box.innerHTML =
+      '<div class="hero__label"><span>План работ</span><span class="hero__hint">' + jobs.length + ' ' + plural(jobs.length, ['работа', 'работы', 'работ']) + '</span></div>' +
+      '<p class="hero__value" style="font-size:28px">' + fmtMoney(left) + '</p>' +
+      '<p class="hint" style="margin:2px 0 12px">осталось сделать · всего по плану ' + fmtMoney(total) + '</p>' +
+      '<div class="bar"><div class="bar__fill bar__fill--income" style="width:' + pct + '%"></div></div>' +
+      '<div class="hero__stats" style="margin-top:12px;padding-top:12px">' +
+        '<div class="stat"><span class="stat__label">Выполнено</span><span class="stat__value" style="font-size:var(--fs-md)">' + fmtMoney(doneSum) + '</span></div>' +
+        '<div class="stat"><span class="stat__label">Готово</span><span class="stat__value" style="font-size:var(--fs-md)">' + pct + '%</span></div>' +
+      '</div>';
+  }
+
+  function renderRepairChips() {
+    var box = el('repair-chips');
+    var chips = [{ id: 'all', label: 'Все машины' }];
+    state.cars.forEach(function (car) {
+      var count = state.jobs.filter(function (job) { return job.carId === car.id; }).length;
+      if (!count) return;
+      chips.push({ id: 'car:' + car.id, label: '🚗 ' + carTitle(car) });
+    });
+    box.innerHTML = chips.map(function (chip) {
+      var on = view.repairCar === chip.id;
+      return '<button class="chip' + (on ? ' is-on' : '') + '" type="button" data-repair-chip="' + esc(chip.id) + '" aria-pressed="' + on + '">' + esc(chip.label) + '</button>';
+    }).join('');
+  }
+
+  function renderRepairList() {
+    var box = el('repair-list');
+    var list = state.jobs.filter(function (job) {
+      if (view.repairCar === 'all') return true;
+      return job.carId === view.repairCar.slice(4);
+    });
+
+    if (!list.length) {
+      box.innerHTML = '<p class="empty empty--sm">Пока нечего делать. Добавьте работу кнопкой «+».</p>';
+      return;
+    }
+
+    list = list.slice().sort(function (a, b) {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return b.estimate - a.estimate;
+    });
+
+    box.innerHTML = list.map(function (job) {
+      var car = carById(job.carId);
+      var meta = carTitle(car);
+      return '<div class="job' + (job.done ? ' is-done' : '') + '">' +
+        '<div class="job__head">' +
+          '<button class="job__toggle" type="button" data-job-toggle="' + esc(job.id) + '" aria-label="' + (job.done ? 'Вернуть в план' : 'Отметить выполненной') + '" aria-pressed="' + job.done + '">' +
+            (job.done ? CHECK_SVG : CIRCLE_SVG) +
+          '</button>' +
+          '<div style="min-width:0">' +
+            '<span class="job__title">' + esc(job.title) + '</span>' +
+            '<span class="job__meta">' + esc(meta) + '</span>' +
           '</div>' +
-          '<span class="plan__amount row__amount--' + (direction === 'owed' ? 'income' : 'expense') + '">' + fmtMoney(item.amount) + '</span>' +
-          '<button class="row__del" type="button" data-debt-del="' + esc(item.id) + '" aria-label="Удалить долг: ' + esc(item.name) + '">' + TRASH_SVG + '</button>' +
+          '<span class="job__amount">' + fmtMoney(job.estimate) + '</span>' +
+          '<button class="row__del" type="button" data-job-del="' + esc(job.id) + '" aria-label="Удалить работу: ' + esc(job.title) + '">' + TRASH_SVG + '</button>' +
         '</div>' +
       '</div>';
     }).join('');
-
-    return '<div class="card debt-group">' +
-      '<div class="debt-group__head">' +
-        '<h3 class="debt-group__title">' + title + ' · <em>' + fmtMoney(round2(total)) + '</em></h3>' +
-        '<button class="add-btn" type="button" data-add="debt" data-direction="' + direction + '" aria-label="Добавить в «' + title + '»">' + PLUS_SVG + '</button>' +
-      '</div>' +
-      (rows || '<p class="empty empty--sm">Пока пусто</p>') +
-    '</div>';
   }
 
+  /* ---------- Экран «Ещё» ---------- */
   function renderMore() {
-    var all = totals(state.tx);
+    var sum = allStats();
     var rows = [
-      '<div class="kv"><span>Доходы</span><span class="kv__value kv__value--in">' + fmtMoney(all.income) + '</span></div>',
-      '<div class="kv"><span>Расходы</span><span class="kv__value kv__value--out">' + fmtMoney(all.expense) + '</span></div>',
-      '<div class="kv"><span>Баланс</span><span class="kv__value">' + (all.balance < 0 ? '−' : '') + fmtMoney(all.balance) + '</span></div>',
-      '<div class="kv"><span>Операций</span><span class="kv__value">' + state.tx.length + '</span></div>',
-      '<div class="kv"><span>Целей и долгов</span><span class="kv__value">' + state.goals.length + ' / ' + state.debts.length + '</span></div>'
+      '<div class="kv"><span>Потрачено на покупку</span><span class="kv__value">' + fmtMoney(sum.buy) + '</span></div>',
+      '<div class="kv"><span>Запчасти, сервис и прочее</span><span class="kv__value kv__value--out">' + fmtMoney(sum.costs) + '</span></div>',
+      '<div class="kv"><span>Выручка с продаж</span><span class="kv__value kv__value--in">' + fmtMoney(sum.revenue) + '</span></div>',
+      '<div class="kv"><span>Чистая прибыль по проданным</span><span class="kv__value">' + fmtSigned(sum.profit) + '</span></div>',
+      '<div class="kv"><span>Вложено в машины в работе</span><span class="kv__value kv__value--out">' + fmtMoney(sum.investedWork) + '</span></div>',
+      '<div class="kv"><span>Машин</span><span class="kv__value">' + sum.inWork + ' в работе / ' + sum.sold + ' продано</span></div>',
+      '<div class="kv"><span>Операций</span><span class="kv__value">' + state.tx.length + '</span></div>'
     ];
     el('more-totals').innerHTML = rows.join('');
+    renderMoreCars();
+  }
+
+  function renderMoreCars() {
+    var box = el('more-cars');
+    if (!state.cars.length) {
+      box.innerHTML = '<p class="empty empty--sm">Машин пока нет.</p>';
+      return;
+    }
+    box.innerHTML = state.cars.slice().sort(function (a, b) {
+      return a.created < b.created ? 1 : -1;
+    }).map(function (car) {
+      var s = carStats(car.id);
+      return '<div class="row row--flat">' +
+        '<span class="row__mark" aria-hidden="true">🚗</span>' +
+        '<button class="row__main" type="button" data-car-open="' + esc(car.id) + '">' +
+          '<span class="row__title">' + esc(carTitle(car)) + '</span>' +
+          '<span class="row__meta">' + (s.sold ? 'Продана · ' + fmtSigned(s.profit) : 'В работе · вложено ' + fmtMoney(s.invested)) + '</span>' +
+        '</button>' +
+        '<span class="row__amount row__amount--' + (s.sold && s.profit < 0 ? 'expense' : 'income') + '" style="font-size:var(--fs-xs)">' + (s.sold ? fmtSigned(s.profit) : fmtMoney(s.invested)) + '</span>' +
+      '</div>';
+    }).join('');
   }
 
   function renderAll() {
     renderOverview();
+    renderCars();
     renderOps();
-    renderPlans();
+    renderRepair();
     renderMore();
   }
 
+  /* ---------- Нижний лист ---------- */
   var sheetState = { kind: '', id: '', lastFocus: null };
 
   function openSheet(config) {
@@ -2065,127 +2169,102 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     if (last && typeof last.focus === 'function') last.focus();
   }
 
-  function catOptions(type, selected) {
-    return CAT_LIST[type].map(function (cat) {
-      return '<option value="' + cat.id + '"' + (selected === cat.id ? ' selected' : '') + '>' +
-        cat.emoji + ' ' + esc(cat.name) + '</option>';
+  function carOptions(selected) {
+    return state.cars.map(function (car) {
+      return '<option value="' + esc(car.id) + '"' + (selected === car.id ? ' selected' : '') + '>' +
+        esc(carTitle(car)) + (car.plate ? ' · ' + esc(car.plate) : '') + '</option>';
     }).join('');
   }
 
+  function catOptions(selected) {
+    var html = CAT_LIST.map(function (cat) {
+      return '<option value="' + cat.id + '"' + (selected === cat.id ? ' selected' : '') + '>' +
+        cat.emoji + ' ' + esc(cat.name) + '</option>';
+    }).join('');
+    html += '<optgroup label="Доход">' +
+      '<option value="sale"' + (selected === 'sale' ? ' selected' : '') + '>💰 Продажа авто</option>' +
+    '</optgroup>';
+    return html;
+  }
+
   function txFormHtml(tx) {
-    var type = tx ? tx.type : 'expense';
-    return '<div class="seg" role="group" aria-label="Тип операции">' +
-        '<button class="seg__btn seg__btn--out' + (type === 'expense' ? ' is-on' : '') + '" type="button" data-type="expense" aria-pressed="' + (type === 'expense') + '">Расход</button>' +
-        '<button class="seg__btn seg__btn--in' + (type === 'income' ? ' is-on' : '') + '" type="button" data-type="income" aria-pressed="' + (type === 'income') + '">Доход</button>' +
-      '</div>' +
+    var carSel = tx ? tx.carId : (state.cars[0] ? state.cars[0].id : '');
+    var catSel = tx ? tx.cat : 'parts';
+    return '<div class="field"><label class="field__label" for="f-car">Машина</label>' +
+        '<select class="input" id="f-car">' + carOptions(carSel) + '</select></div>' +
+      '<div class="field"><label class="field__label" for="f-cat">Что за трата</label>' +
+        '<select class="input" id="f-cat">' + catOptions(catSel) + '</select></div>' +
       '<div class="field"><label class="field__label" for="f-amount">Сумма</label>' +
         '<div class="input-wrap"><input class="input" id="f-amount" inputmode="decimal" autocomplete="off" placeholder="0" value="' + (tx ? fmtInput(tx.amount) : '') + '"><span class="input-wrap__suffix">₽</span></div>' +
       '</div>' +
-      '<div class="field"><label class="field__label" for="f-cat">Категория</label>' +
-        '<select class="input" id="f-cat">' + catOptions(type, tx ? tx.cat : '') + '</select>' +
-      '</div>' +
       '<div class="field"><label class="field__label" for="f-note">Комментарий</label>' +
-        '<input class="input" id="f-note" maxlength="80" autocomplete="off" placeholder="Необязательно" value="' + (tx ? esc(tx.note) : '') + '">' +
+        '<input class="input" id="f-note" maxlength="100" autocomplete="off" placeholder="Необязательно" value="' + (tx ? esc(tx.note) : '') + '">' +
       '</div>' +
       '<div class="field"><label class="field__label" for="f-date">Дата</label>' +
         '<input class="input" id="f-date" type="date" value="' + (tx ? tx.date : todayISO()) + '">' +
-      '</div>';
+      '</div>' +
+      '<p class="hint">«Продажа авто» — это выручка. Она идёт в плюс, всё остальное — в минус.</p>';
   }
 
-  function openTxSheet(tx) {
+  function openTxSheet(tx, presetCar) {
+    if (!state.cars.length) {
+      toast('Сначала добавьте машину');
+      openCarSheet(null);
+      return;
+    }
+    var model = tx || (presetCar ? { carId: presetCar, cat: 'parts', amount: 0, note: '', date: todayISO() } : null);
     openSheet({
       kind: 'tx',
       id: tx ? tx.id : '',
       title: tx ? 'Операция' : 'Новая операция',
       submit: tx ? 'Сохранить' : 'Добавить',
-      html: txFormHtml(tx)
+      html: txFormHtml(model)
     });
   }
 
-  function openBudgetSheet(catId) {
-    var current = catId && state.budgets[catId] ? state.budgets[catId] : null;
-    var options = CAT_LIST.expense.map(function (cat) {
-      var limit = state.budgets[cat.id];
-      var suffix = limit ? ' — лимит ' + fmtMoney(limit) : '';
-      return '<option value="' + cat.id + '"' + (catId === cat.id ? ' selected' : '') + '>' + cat.emoji + ' ' + esc(cat.name) + suffix + '</option>';
-    }).join('');
+  function carFormHtml(car) {
+    return '<div class="field"><label class="field__label" for="f-name">Машина</label>' +
+        '<input class="input" id="f-name" maxlength="60" autocomplete="off" placeholder="Например, Kia Rio 2019" value="' + (car ? esc(car.name) : '') + '"></div>' +
+      '<div class="field"><label class="field__label" for="f-year">Год</label>' +
+        '<input class="input" id="f-year" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="2019" value="' + (car ? esc(car.year) : '') + '"></div>' +
+      '<div class="field"><label class="field__label" for="f-plate">Номер</label>' +
+        '<input class="input" id="f-plate" maxlength="16" autocomplete="off" placeholder="А123ВС77" value="' + (car ? esc(car.plate) : '') + '"></div>' +
+      '<p class="hint">Куплена за какую сумму — добавьте операцией «Покупка авто». Продажа переводит машину в статус «продана».</p>';
+  }
+
+  function openCarSheet(car) {
     openSheet({
-      kind: 'budget',
-      title: catId ? 'Изменить бюджет' : 'Новый бюджет',
-      submit: 'Сохранить',
-      html: '<div class="field"><label class="field__label" for="f-cat">Категория</label>' +
-          '<select class="input" id="f-cat">' + options + '</select></div>' +
-        '<div class="field"><label class="field__label" for="f-amount">Лимит на месяц</label>' +
-          '<div class="input-wrap"><input class="input" id="f-amount" inputmode="decimal" autocomplete="off" placeholder="0" value="' + (current ? fmtInput(current) : '') + '"><span class="input-wrap__suffix">₽</span></div></div>' +
-        '<p class="hint">На 80% полоска станет жёлтой, на 100% — красной.</p>'
+      kind: 'car',
+      id: car ? car.id : '',
+      title: car ? 'Машина' : 'Новая машина',
+      submit: car ? 'Сохранить' : 'Добавить',
+      html: carFormHtml(car)
     });
   }
 
-  function openGoalSheet() {
-    openSheet({
-      kind: 'goal',
-      title: 'Новая цель',
-      submit: 'Создать',
-      html: '<div class="field"><span class="field__label">Значок</span>' +
-          '<div class="emojis" role="group" aria-label="Значок цели">' +
-            EMOJIS.map(function (emoji, index) {
-              return '<button class="emoji' + (index === 0 ? ' is-on' : '') + '" type="button" data-emoji="' + emoji + '" aria-pressed="' + (index === 0) + '">' + emoji + '</button>';
-            }).join('') +
-          '</div></div>' +
-        '<div class="field"><label class="field__label" for="f-title">Название</label>' +
-          '<input class="input" id="f-title" maxlength="40" autocomplete="off" placeholder="Например, отпуск"></div>' +
-        '<div class="field"><label class="field__label" for="f-amount">Сколько нужно</label>' +
-          '<div class="input-wrap"><input class="input" id="f-amount" inputmode="decimal" autocomplete="off" placeholder="0"><span class="input-wrap__suffix">₽</span></div></div>'
-    });
+  function jobFormHtml(job) {
+    var carSel = job ? job.carId : (state.cars[0] ? state.cars[0].id : '');
+    return '<div class="field"><label class="field__label" for="f-car">Машина</label>' +
+        '<select class="input" id="f-car">' + carOptions(carSel) + '</select></div>' +
+      '<div class="field"><label class="field__label" for="f-title">Что сделать</label>' +
+        '<input class="input" id="f-title" maxlength="60" autocomplete="off" placeholder="Замена масла" value="' + (job ? esc(job.title) : '') + '"></div>' +
+      '<div class="field"><label class="field__label" for="f-amount">Сколько будет стоить</label>' +
+        '<div class="input-wrap"><input class="input" id="f-amount" inputmode="decimal" autocomplete="off" placeholder="0" value="' + (job ? fmtInput(job.estimate) : '') + '"><span class="input-wrap__suffix">₽</span></div></div>' +
+      '<p class="hint">План работ — это смета. Когда сделаете, отметьте галочкой.</p>';
   }
 
-  function openGoalAddSheet(goalId) {
-    var goal = null;
-    state.goals.forEach(function (item) { if (item.id === goalId) goal = item; });
-    if (!goal) return;
+  function openJobSheet(job) {
+    if (!state.cars.length) {
+      toast('Сначала добавьте машину');
+      openCarSheet(null);
+      return;
+    }
     openSheet({
-      kind: 'goal-add',
-      id: goal.id,
-      title: 'Отложить на цель',
-      submit: 'Отложить',
-      html: '<p class="hint">' + esc(goal.title) + ': ' + fmtMoney(goal.saved) + ' из ' + fmtMoney(goal.target) + '</p>' +
-        '<div class="field"><label class="field__label" for="f-amount">Сумма</label>' +
-          '<div class="input-wrap"><input class="input" id="f-amount" inputmode="decimal" autocomplete="off" placeholder="0"><span class="input-wrap__suffix">₽</span></div></div>'
-    });
-  }
-
-  function openRecurringSheet() {
-    var days = '';
-    for (var day = 1; day <= 31; day++) days += '<option value="' + day + '"' + (day === 1 ? ' selected' : '') + '>' + day + ' число</option>';
-    openSheet({
-      kind: 'recurring',
-      title: 'Постоянный платёж',
-      submit: 'Добавить',
-      html: '<div class="field"><label class="field__label" for="f-title">Название</label>' +
-          '<input class="input" id="f-title" maxlength="40" autocomplete="off" placeholder="Например, аренда"></div>' +
-        '<div class="field"><label class="field__label" for="f-day">День месяца</label>' +
-          '<select class="input" id="f-day">' + days + '</select></div>' +
-        '<div class="field"><label class="field__label" for="f-amount">Сумма</label>' +
-          '<div class="input-wrap"><input class="input" id="f-amount" inputmode="decimal" autocomplete="off" placeholder="0"><span class="input-wrap__suffix">₽</span></div></div>'
-    });
-  }
-
-  function openDebtSheet(direction) {
-    var dir = direction === 'owe' ? 'owe' : 'owed';
-    openSheet({
-      kind: 'debt',
-      title: 'Новый долг',
-      submit: 'Добавить',
-      html: '<div class="seg" role="group" aria-label="Тип долга">' +
-          '<button class="seg__btn seg__btn--in' + (dir === 'owed' ? ' is-on' : '') + '" type="button" data-dir="owed" aria-pressed="' + (dir === 'owed') + '">Мне должны</button>' +
-          '<button class="seg__btn seg__btn--out' + (dir === 'owe' ? ' is-on' : '') + '" type="button" data-dir="owe" aria-pressed="' + (dir === 'owe') + '">Я должен</button>' +
-        '</div>' +
-        '<div class="field"><label class="field__label" for="f-name">Имя</label>' +
-          '<input class="input" id="f-name" maxlength="40" autocomplete="off" placeholder="Кто и за что"></div>' +
-        '<div class="field"><label class="field__label" for="f-amount">Сумма</label>' +
-          '<div class="input-wrap"><input class="input" id="f-amount" inputmode="decimal" autocomplete="off" placeholder="0"><span class="input-wrap__suffix">₽</span></div></div>' +
-        '<div class="field"><label class="field__label" for="f-due">Вернуть до</label>' +
-          '<input class="input" id="f-due" type="date" value="' + todayISO() + '"></div>'
+      kind: 'job',
+      id: job ? job.id : '',
+      title: job ? 'Работа' : 'Новая работа',
+      submit: job ? 'Сохранить' : 'Добавить',
+      html: jobFormHtml(job)
     });
   }
 
@@ -2205,111 +2284,87 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     if (!kind) return;
     el('sheet-error').hidden = true;
 
+    if (kind === 'car') {
+      var name = el('f-name').value.replace(/\s+/g, ' ').trim().slice(0, 60);
+      if (!name) return fail('Укажите марку и модель', 'f-name');
+      var year = el('f-year').value.replace(/\D/g, '').slice(0, 4);
+      var plate = el('f-plate').value.toUpperCase().replace(/\s+/g, '').slice(0, 16);
+      var id = sheetState.id;
+
+      if (id) {
+        var car = carById(id);
+        if (!car) { closeSheet(); return; }
+        car.name = name;
+        car.year = year;
+        car.plate = plate;
+      } else {
+        state.cars.push({ id: newId(), name: name, year: year, plate: plate, status: 'work', created: todayISO() });
+      }
+      closeSheet();
+      commit();
+      toast(id ? 'Машина обновлена' : 'Машина добавлена');
+      if (!id) goTo('cars');
+      return;
+    }
+
     if (kind === 'tx') {
-      var typeBtn = el('sheet-fields').querySelector('.seg__btn.is-on');
-      var type = typeBtn ? typeBtn.getAttribute('data-type') : 'expense';
+      var carId = el('f-car').value;
+      if (!carById(carId)) return fail('Выберите машину', 'f-car');
+      var cat = el('f-cat').value;
+      if (!CATS[cat]) return fail('Выберите, что за трата', 'f-cat');
       var amount = parseAmount(el('f-amount').value);
       if (!amount || amount <= 0) return fail('Введите сумму больше нуля', 'f-amount');
       var date = el('f-date').value;
       if (!fromISO(date)) return fail('Укажите дату', 'f-date');
-      var cat = el('f-cat').value;
-      if (!CATS[cat] || CATS[cat].type !== type) cat = type === 'income' ? 'other_in' : 'other';
-      var note = el('f-note').value.replace(/\s+/g, ' ').trim().slice(0, 80);
-      var id = sheetState.id;
+      var note = el('f-note').value.replace(/\s+/g, ' ').trim().slice(0, 100);
+      var txId = sheetState.id;
 
-      if (id) {
-        var tx = txById(id);
+      if (txId) {
+        var tx = txById(txId);
         if (!tx) { closeSheet(); return; }
-        tx.type = type;
-        tx.amount = amount;
+        tx.carId = carId;
         tx.cat = cat;
+        tx.amount = amount;
         tx.date = date;
         tx.note = note;
       } else {
-        state.tx.unshift({ id: newId(), date: date, type: type, cat: cat, note: note, amount: amount });
+        state.tx.unshift({ id: newId(), carId: carId, date: date, cat: cat, note: note, amount: amount });
       }
 
-      view.month = monthStart(fromISO(date));
-      view.filter = 'all';
+      /* Продажа переводит машину в статус «продана» */
+      var targetCar = carById(carId);
+      if (targetCar && cat === 'sale') targetCar.status = 'sold';
+
+      view.opsFilter = 'all';
       view.query = '';
       el('ops-search').value = '';
       closeSheet();
       commit();
-      toast(id ? 'Операция обновлена' : 'Операция добавлена');
+      toast(txId ? 'Операция обновлена' : 'Операция добавлена');
       return;
     }
 
-    if (kind === 'budget') {
-      var budgetCat = el('f-cat').value;
-      var limit = parseAmount(el('f-amount').value);
-      if (!CATS[budgetCat] || CATS[budgetCat].type !== 'expense') return fail('Выберите категорию', 'f-cat');
-      if (!limit || limit <= 0) return fail('Введите лимит больше нуля', 'f-amount');
-      state.budgets[budgetCat] = limit;
-      closeSheet();
-      commit();
-      toast('Бюджет сохранён');
-      return;
-    }
+    if (kind === 'job') {
+      var jobCar = el('f-car').value;
+      if (!carById(jobCar)) return fail('Выберите машину', 'f-car');
+      var title = el('f-title').value.replace(/\s+/g, ' ').trim().slice(0, 60);
+      if (!title) return fail('Напишите, что нужно сделать', 'f-title');
+      var estimate = parseAmount(el('f-amount').value);
+      if (!estimate || estimate <= 0) return fail('Укажите стоимость', 'f-amount');
+      var jobId = sheetState.id;
 
-    if (kind === 'goal') {
-      var title = el('f-title').value.trim().slice(0, 40);
-      if (!title) return fail('Назовите цель', 'f-title');
-      var target = parseAmount(el('f-amount').value);
-      if (!target || target <= 0) return fail('Введите сумму цели', 'f-amount');
-      var emojiBtn = el('sheet-fields').querySelector('[data-emoji].is-on');
-      state.goals.push({
-        id: newId(),
-        title: title,
-        emoji: emojiBtn ? emojiBtn.textContent : '🎯',
-        target: target,
-        saved: 0
-      });
+      if (jobId) {
+        var job = jobById(jobId);
+        if (!job) { closeSheet(); return; }
+        job.carId = jobCar;
+        job.title = title;
+        job.estimate = estimate;
+      } else {
+        state.jobs.push({ id: newId(), carId: jobCar, title: title, estimate: estimate, done: false });
+      }
       closeSheet();
       commit();
-      toast('Цель создана');
-      return;
-    }
-
-    if (kind === 'goal-add') {
-      var goal = null;
-      state.goals.forEach(function (item) { if (item.id === sheetState.id) goal = item; });
-      if (!goal) { closeSheet(); return; }
-      var add = parseAmount(el('f-amount').value);
-      if (!add || add <= 0) return fail('Введите сумму больше нуля', 'f-amount');
-      goal.saved = round2(goal.saved + add);
-      closeSheet();
-      commit();
-      toast('Отложено ' + fmtMoney(add));
-      return;
-    }
-
-    if (kind === 'recurring') {
-      var recTitle = el('f-title').value.trim().slice(0, 40);
-      if (!recTitle) return fail('Назовите платёж', 'f-title');
-      var day = parseInt(el('f-day').value, 10);
-      if (!day || day < 1 || day > 31) return fail('Выберите день месяца', 'f-day');
-      var recAmount = parseAmount(el('f-amount').value);
-      if (!recAmount || recAmount <= 0) return fail('Введите сумму больше нуля', 'f-amount');
-      state.recurring.push({ id: newId(), title: recTitle, day: day, amount: recAmount });
-      closeSheet();
-      commit();
-      toast('Платёж добавлен');
-      return;
-    }
-
-    if (kind === 'debt') {
-      var dirBtn = el('sheet-fields').querySelector('[data-dir].is-on');
-      var direction = dirBtn && dirBtn.getAttribute('data-dir') === 'owe' ? 'owe' : 'owed';
-      var name = el('f-name').value.trim().slice(0, 40);
-      if (!name) return fail('Укажите имя или повод', 'f-name');
-      var debtAmount = parseAmount(el('f-amount').value);
-      if (!debtAmount || debtAmount <= 0) return fail('Введите сумму больше нуля', 'f-amount');
-      var due = el('f-due').value;
-      if (due && !fromISO(due)) due = '';
-      state.debts.push({ id: newId(), name: name, amount: debtAmount, due: due, direction: direction });
-      closeSheet();
-      commit();
-      toast('Долг добавлен');
+      toast(jobId ? 'Работа обновлена' : 'Работа добавлена');
     }
   }
 
@@ -2372,15 +2427,14 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
       if (on) tab.setAttribute('aria-current', 'page');
       else tab.removeAttribute('aria-current');
     });
-    el('fab').hidden = !(screen === 'overview' || screen === 'ops');
+    el('fab').hidden = !(screen === 'overview' || screen === 'ops' || screen === 'cars');
     window.scrollTo(0, 0);
   }
 
-  function changeMonth(delta) {
-    var next = addMonths(view.month, delta);
-    if (next.getTime() > monthStart(new Date()).getTime()) return;
-    view.month = next;
-    renderOverview();
+  function openCarOps(carId) {
+    view.opsFilter = 'car:' + carId;
+    goTo('ops');
+    renderOps();
   }
 
   function askDeleteTx(id) {
@@ -2389,84 +2443,56 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     var cat = CATS[tx.cat] || CATS.other;
     askConfirm({
       title: 'Удалить операцию?',
-      text: '«' + (tx.note || cat.name) + '» на ' + fmtMoney(tx.amount) + ' исчезнет из истории.',
+      text: '«' + (tx.note || cat.name) + '» на ' + fmtMoney(tx.amount) + ' исчезнет из истории и из расчёта по машине.',
       confirmLabel: 'Удалить',
       onConfirm: function () {
         state.tx = state.tx.filter(function (item) { return item.id !== id; });
-        if (view.filter.indexOf('cat:') === 0) {
-          var catId = view.filter.slice(4);
-          var still = state.tx.some(function (item) { return item.cat === catId; });
-          if (!still) view.filter = 'all';
-        }
         commit();
         toast('Операция удалена');
       }
     });
   }
 
-  function askDeleteBudget(catId) {
-    var cat = CATS[catId];
-    if (!cat) return;
+  function askDeleteCar(id) {
+    var car = carById(id);
+    if (!car) return;
+    var count = state.tx.filter(function (tx) { return tx.carId === id; }).length;
+    var jobs = state.jobs.filter(function (job) { return job.carId === id; }).length;
+    var extra = [];
+    if (count) extra.push('операций: ' + count);
+    if (jobs) extra.push('работ: ' + jobs);
     askConfirm({
-      title: 'Убрать бюджет?',
-      text: 'Лимит для «' + cat.name + '» больше не будет отслеживаться. Операции останутся.',
-      confirmLabel: 'Убрать',
-      onConfirm: function () {
-        delete state.budgets[catId];
-        commit();
-        toast('Бюджет убран');
-      }
-    });
-  }
-
-  function askDeleteGoal(id) {
-    var goal = null;
-    state.goals.forEach(function (item) { if (item.id === id) goal = item; });
-    if (!goal) return;
-    askConfirm({
-      title: 'Удалить цель?',
-      text: '«' + goal.title + '» и накопления по ней исчезнут.',
+      title: 'Удалить машину?',
+      text: '«' + carTitle(car) + '»' + (extra.length ? ' вместе со всем, что к ней привязано (' + extra.join(', ') + ')' : '') + '. Отменить будет нельзя.',
       confirmLabel: 'Удалить',
       onConfirm: function () {
-        state.goals = state.goals.filter(function (item) { return item.id !== id; });
+        state.cars = state.cars.filter(function (item) { return item.id !== id; });
+        state.tx = state.tx.filter(function (tx) { return tx.carId !== id; });
+        state.jobs = state.jobs.filter(function (job) { return job.carId !== id; });
+        if (view.opsFilter === 'car:' + id) view.opsFilter = 'all';
+        if (view.repairCar === 'car:' + id) view.repairCar = 'all';
         commit();
-        toast('Цель удалена');
+        toast('Машина удалена');
       }
     });
   }
 
-  function askDeleteRecurring(id) {
-    var item = null;
-    state.recurring.forEach(function (rec) { if (rec.id === id) item = rec; });
-    if (!item) return;
+  function askDeleteJob(id) {
+    var job = jobById(id);
+    if (!job) return;
     askConfirm({
-      title: 'Удалить платёж?',
-      text: '«' + item.title + '» больше не будет в списке постоянных платежей.',
+      title: 'Удалить работу?',
+      text: '«' + job.title + '» исчезнет из плана работ.',
       confirmLabel: 'Удалить',
       onConfirm: function () {
-        state.recurring = state.recurring.filter(function (rec) { return rec.id !== id; });
+        state.jobs = state.jobs.filter(function (item) { return item.id !== id; });
         commit();
-        toast('Платёж удалён');
+        toast('Работа удалена');
       }
     });
   }
 
-  function askDeleteDebt(id) {
-    var item = null;
-    state.debts.forEach(function (debt) { if (debt.id === id) item = debt; });
-    if (!item) return;
-    askConfirm({
-      title: 'Удалить долг?',
-      text: 'Запись «' + item.name + '» на ' + fmtMoney(item.amount) + ' исчезнет.',
-      confirmLabel: 'Удалить',
-      onConfirm: function () {
-        state.debts = state.debts.filter(function (debt) { return debt.id !== id; });
-        commit();
-        toast('Долг удалён');
-      }
-    });
-  }
-
+  /* ---------- Экспорт / импорт ---------- */
   function csvCell(value) {
     var text = String(value);
     if (/[";\n\r]/.test(text)) return '"' + text.replace(/"/g, '""') + '"';
@@ -2486,24 +2512,26 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
   }
 
   function exportCsv() {
-    var rows = [['Дата', 'Тип', 'Категория', 'Комментарий', 'Сумма']];
+    var rows = [['Дата', 'Машина', 'Номер', 'Категория', 'Комментарий', 'Сумма']];
     state.tx.slice().sort(function (a, b) {
       if (a.date === b.date) return 0;
       return a.date < b.date ? -1 : 1;
     }).forEach(function (tx) {
       var cat = CATS[tx.cat];
+      var car = carById(tx.carId);
       rows.push([
         tx.date,
-        tx.type === 'income' ? 'Доход' : 'Расход',
+        carTitle(car),
+        car ? car.plate : '',
         cat ? cat.name : 'Прочее',
         tx.note,
-        String(round2(tx.amount)).replace('.', ',')
+        isSale(tx) ? String(round2(tx.amount)).replace('.', ',') : '-' + String(round2(tx.amount)).replace('.', ',')
       ]);
     });
     var csv = '\uFEFF' + rows.map(function (row) {
       return row.map(csvCell).join(';');
     }).join('\r\n');
-    download('money-' + todayISO() + '.csv', csv, 'text/csv;charset=utf-8');
+    download('garage-' + todayISO() + '.csv', csv, 'text/csv;charset=utf-8');
     toast('CSV сохранён');
   }
 
@@ -2511,13 +2539,11 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     var data = {
       version: VERSION,
       exportedAt: new Date().toISOString(),
+      cars: state.cars,
       tx: state.tx,
-      budgets: state.budgets,
-      goals: state.goals,
-      recurring: state.recurring,
-      debts: state.debts
+      jobs: state.jobs
     };
-    download('money-backup-' + todayISO() + '.json', JSON.stringify(data, null, 2), 'application/json');
+    download('garage-backup-' + todayISO() + '.json', JSON.stringify(data, null, 2), 'application/json');
     toast('Копия сохранена');
   }
 
@@ -2531,14 +2557,14 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
         toast('Файл повреждён: это не JSON');
         return;
       }
-      if (!data || (!Array.isArray(data.tx) && !Array.isArray(data.items))) {
+      if (!data || (!Array.isArray(data.cars) && !Array.isArray(data.tx))) {
         toast('В файле нет данных приложения');
         return;
       }
       var next = normalize(data);
       askConfirm({
         title: 'Заменить все данные?',
-        text: 'Из копии загрузится операций: ' + next.tx.length + '. Текущие данные будут потеряны.',
+        text: 'Из копии загрузится машин: ' + next.cars.length + ', операций: ' + next.tx.length + '. Текущие данные будут потеряны.',
         confirmLabel: 'Заменить',
         onConfirm: function () {
           state = next;
@@ -2556,7 +2582,7 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
   function wipeAll() {
     askConfirm({
       title: 'Удалить все данные?',
-      text: 'Пропадут операции, бюджеты, цели, платежи и долги. Отменить это будет нельзя.',
+      text: 'Пропадут машины, операции и план работ. Отменить это будет нельзя.',
       confirmLabel: 'Удалить всё',
       onConfirm: function () {
         state = emptyState();
@@ -2568,6 +2594,7 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     });
   }
 
+  /* ---------- События ---------- */
   document.addEventListener('click', function (event) {
     var closer = event.target.closest('[data-close]');
     if (closer) { closeSheet(); return; }
@@ -2582,11 +2609,32 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     if (go) { goTo(go); return; }
 
     if (target.hasAttribute('data-add-tx')) { openTxSheet(null); return; }
-    if (target.hasAttribute('data-prev')) { changeMonth(-1); return; }
-    if (target.hasAttribute('data-next')) { changeMonth(1); return; }
 
-    var chip = target.getAttribute('data-chip');
-    if (chip) { view.filter = chip; renderOps(); return; }
+    var add = target.getAttribute('data-add');
+    if (add === 'car') { openCarSheet(null); return; }
+    if (add === 'job') { openJobSheet(null); return; }
+
+    var carChip = target.getAttribute('data-car-chip');
+    if (carChip) { view.carFilter = carChip; renderCars(); return; }
+
+    var opsChip = target.getAttribute('data-ops-chip');
+    if (opsChip) { view.opsFilter = opsChip; renderOps(); return; }
+
+    var repairChip = target.getAttribute('data-repair-chip');
+    if (repairChip) { view.repairCar = repairChip; renderRepairChips(); renderRepairList(); return; }
+
+    var carOpen = target.getAttribute('data-car-open');
+    if (carOpen) { openCarOps(carOpen); return; }
+
+    var carEdit = target.getAttribute('data-car-edit');
+    if (carEdit) {
+      var car = carById(carEdit);
+      if (car) openCarSheet(car);
+      return;
+    }
+
+    var carDel = target.getAttribute('data-car-del');
+    if (carDel) { askDeleteCar(carDel); return; }
 
     var editId = target.getAttribute('data-edit');
     if (editId) {
@@ -2598,29 +2646,19 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     var delId = target.getAttribute('data-del');
     if (delId) { askDeleteTx(delId); return; }
 
-    var add = target.getAttribute('data-add');
-    if (add === 'budget') { openBudgetSheet(''); return; }
-    if (add === 'goal') { openGoalSheet(); return; }
-    if (add === 'recurring') { openRecurringSheet(); return; }
-    if (add === 'debt') { openDebtSheet(target.getAttribute('data-direction')); return; }
+    var jobToggle = target.getAttribute('data-job-toggle');
+    if (jobToggle) {
+      var job = jobById(jobToggle);
+      if (job) {
+        job.done = !job.done;
+        commit();
+        toast(job.done ? 'Отмечено выполненным' : 'Возвращено в план');
+      }
+      return;
+    }
 
-    var budgetEdit = target.getAttribute('data-budget-edit');
-    if (budgetEdit) { openBudgetSheet(budgetEdit); return; }
-
-    var budgetDel = target.getAttribute('data-budget-del');
-    if (budgetDel) { askDeleteBudget(budgetDel); return; }
-
-    var goalAdd = target.getAttribute('data-goal-add');
-    if (goalAdd) { openGoalAddSheet(goalAdd); return; }
-
-    var goalDel = target.getAttribute('data-goal-del');
-    if (goalDel) { askDeleteGoal(goalDel); return; }
-
-    var recDel = target.getAttribute('data-rec-del');
-    if (recDel) { askDeleteRecurring(recDel); return; }
-
-    var debtDel = target.getAttribute('data-debt-del');
-    if (debtDel) { askDeleteDebt(debtDel); return; }
+    var jobDel = target.getAttribute('data-job-del');
+    if (jobDel) { askDeleteJob(jobDel); return; }
 
     var exportKind = target.getAttribute('data-export');
     if (exportKind === 'csv') { exportCsv(); return; }
@@ -2628,40 +2666,6 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
 
     if (target.hasAttribute('data-import')) { el('import-file').click(); return; }
     if (target.hasAttribute('data-wipe')) { wipeAll(); }
-  });
-
-  el('sheet-fields').addEventListener('click', function (event) {
-    var typeBtn = event.target.closest('[data-type]');
-    if (typeBtn) {
-      var type = typeBtn.getAttribute('data-type');
-      Array.prototype.forEach.call(el('sheet-fields').querySelectorAll('[data-type]'), function (btn) {
-        var on = btn === typeBtn;
-        btn.classList.toggle('is-on', on);
-        btn.setAttribute('aria-pressed', String(on));
-      });
-      var select = el('f-cat');
-      if (select) select.innerHTML = catOptions(type, '');
-      return;
-    }
-
-    var dirBtn = event.target.closest('[data-dir]');
-    if (dirBtn) {
-      Array.prototype.forEach.call(el('sheet-fields').querySelectorAll('[data-dir]'), function (btn) {
-        var on = btn === dirBtn;
-        btn.classList.toggle('is-on', on);
-        btn.setAttribute('aria-pressed', String(on));
-      });
-      return;
-    }
-
-    var emojiBtn = event.target.closest('[data-emoji]');
-    if (emojiBtn) {
-      Array.prototype.forEach.call(el('sheet-fields').querySelectorAll('[data-emoji]'), function (btn) {
-        var on = btn === emojiBtn;
-        btn.classList.toggle('is-on', on);
-        btn.setAttribute('aria-pressed', String(on));
-      });
-    }
   });
 
   el('sheet-form').addEventListener('submit', function (event) {
@@ -2700,30 +2704,6 @@ select.input { appearance: none; padding-right: 38px; background-image: linear-g
     if (!el('confirm').hidden) { closeConfirm(); return; }
     if (!el('sheet').hidden) closeSheet();
   });
-
-  var swipeX = 0;
-  var swipeY = 0;
-  var swiping = false;
-  var card = el('ov-card');
-
-  card.addEventListener('pointerdown', function (event) {
-    if (event.pointerType === 'mouse') return;
-    swipeX = event.clientX;
-    swipeY = event.clientY;
-    swiping = true;
-  });
-
-  card.addEventListener('pointerup', function (event) {
-    if (!swiping) return;
-    swiping = false;
-    var dx = event.clientX - swipeX;
-    var dy = event.clientY - swipeY;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-      changeMonth(dx < 0 ? 1 : -1);
-    }
-  });
-
-  card.addEventListener('pointercancel', function () { swiping = false; });
 
   window.addEventListener('storage', function (event) {
     if (event.key !== KEY) return;
