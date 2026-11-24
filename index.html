@@ -57,12 +57,15 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+html {
+  -webkit-text-size-adjust: 100%;
+  background: var(--bg) url("assets/bg.jpg") center top / cover no-repeat fixed;
+}
 
 body {
   margin: 0;
   min-height: 100dvh;
-  background: var(--bg);
+  background: transparent;
   color: var(--text);
   font-family: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: var(--fs-md);
@@ -70,6 +73,22 @@ body {
   -webkit-font-smoothing: antialiased;
   font-variant-numeric: tabular-nums;
   color-scheme: dark;
+}
+
+/* Фоновый рисунок: слой затемнения поверх картинки, под интерфейсом */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(8, 13, 25, 0.55) 0%, rgba(8, 13, 25, 0.42) 40%, rgba(8, 13, 25, 0.72) 100%),
+    radial-gradient(130% 90% at 50% 0%, rgba(8, 13, 25, 0.10) 0%, rgba(8, 13, 25, 0.60) 100%);
+  pointer-events: none;
+}
+
+body::after {
+  display: none;
 }
 
 body.is-locked { overflow: hidden; }
@@ -168,10 +187,12 @@ input::-webkit-search-cancel-button { display: none; }
 
 /* ---------- Карточки и блоки ---------- */
 .card {
-  background: var(--card);
+  background: rgba(15, 23, 42, 0.86);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   padding: 16px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 .card--flush { padding: 4px 16px; }
 
@@ -234,12 +255,14 @@ input::-webkit-search-cancel-button { display: none; }
 /* ---------- Баланс ---------- */
 .balance {
   position: relative;
-  background: linear-gradient(180deg, #12203A 0%, var(--card) 100%);
+  background: linear-gradient(180deg, rgba(20, 34, 60, 0.90) 0%, rgba(15, 23, 42, 0.90) 100%);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   padding: 18px;
   touch-action: pan-y;
   overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .balance__head {
   display: flex;
