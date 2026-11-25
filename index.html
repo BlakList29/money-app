@@ -1064,6 +1064,92 @@ select.input {
   text-underline-offset: 3px;
 }
 
+/* ---------- Синхронизация ---------- */
+.sync {
+  display: grid;
+  gap: 10px;
+}
+.sync__state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.sync__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted-2);
+  flex: none;
+}
+.sync__dot--on { background: var(--income); box-shadow: 0 0 8px rgba(16, 185, 129, 0.7); }
+.sync__dot--off { background: var(--expense); }
+.sync__dot--wait { background: var(--warn); }
+.sync__email {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sync__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.sync__note {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted-2);
+}
+.sync__form { display: grid; gap: 8px; }
+.sync__tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--deep);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.sync__tab {
+  min-height: 38px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+.sync__tab.is-on { background: var(--accent-soft); color: var(--accent-text); }
+
+/* ---------- Экраны входа ---------- */
+.auth {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  padding: 20px;
+  background: rgba(3, 7, 15, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.auth[hidden] { display: none; }
+.auth__panel {
+  width: min(400px, 100%);
+  max-height: 92dvh;
+  overflow-y: auto;
+  padding: 22px;
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+}
+.auth__title { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; }
+.auth__sub { margin-top: 5px; margin-bottom: 16px; font-size: var(--fs-xs); color: var(--muted); }
+
 /* ---------- Адаптив ---------- */
 @media (max-width: 380px) {
   .app { padding-left: 12px; padding-right: 12px; }
@@ -1224,6 +1310,11 @@ select.input {
       </section>
 
       <section class="block" style="margin-top:0">
+        <h2 class="block__title">Синхронизация</h2>
+        <div class="card" id="sync-card"></div>
+      </section>
+
+      <section class="block">
         <h2 class="block__title">За всё время</h2>
         <div class="card" id="more-totals"></div>
       </section>
@@ -1339,6 +1430,38 @@ select.input {
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toast-text"></span></div>
+
+<div class="auth" id="auth" hidden>
+  <div class="auth__panel" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <h2 class="auth__title" id="auth-title">Вход в аккаунт</h2>
+    <p class="auth__sub" id="auth-sub">Один аккаунт — данные на всех телефонах.</p>
+
+    <div class="sync__tabs" role="tablist">
+      <button class="sync__tab is-on" type="button" role="tab" data-auth-mode="login" aria-selected="true">Вход</button>
+      <button class="sync__tab" type="button" role="tab" data-auth-mode="signup" aria-selected="false">Регистрация</button>
+    </div>
+
+    <form class="sync__form" id="auth-form" novalidate style="margin-top:12px">
+      <div class="field" style="margin-bottom:0">
+        <label class="field__label" for="auth-email">Почта</label>
+        <input class="input" id="auth-email" type="email" inputmode="email" autocomplete="email" placeholder="you@mail.ru" required>
+      </div>
+      <div class="field" id="auth-pass-field" style="margin-bottom:0">
+        <label class="field__label" for="auth-password">Пароль</label>
+        <input class="input" id="auth-password" type="password" autocomplete="current-password" placeholder="Минимум 6 символов">
+      </div>
+      <p class="form__error" id="auth-error" role="alert" hidden></p>
+      <button class="btn" type="submit" id="auth-submit">Войти</button>
+    </form>
+
+    <p class="sync__note" style="margin-top:12px" id="auth-note">
+      Пароль хранит сервис синхронизации. Восстановление — по почте.
+    </p>
+
+    <button class="link" type="button" id="auth-forgot" style="width:100%;margin-top:4px">Забыли пароль?</button>
+    <button class="link" type="button" id="auth-later" style="width:100%;color:var(--muted)">Продолжить без аккаунта</button>
+  </div>
+</div>
 <script>
 (function () {
   'use strict';
@@ -1596,6 +1719,7 @@ select.input {
   function commit() {
     save();
     renderAll();
+    cloudQueue();
   }
 
   /* ---------- Вычисления ---------- */
@@ -2631,6 +2755,403 @@ select.input {
     });
   }
 
+  /* ---------- Облачная синхронизация ---------- */
+
+  /* Настройки проекта Supabase. Пока пусто — приложение работает локально. */
+  var CLOUD = {
+    url: '',
+    anonKey: ''
+  };
+
+  var cloud = {
+    user: null,
+    session: null,
+    busy: false,
+    lastSync: '',
+    error: '',
+    pending: false
+  };
+
+  function cloudConfigured() {
+    return !!(CLOUD.url && CLOUD.anonKey);
+  }
+
+  function cloudHeaders(extra) {
+    var headers = {
+      'apikey': CLOUD.anonKey,
+      'Content-Type': 'application/json'
+    };
+    if (cloud.session && cloud.session.access_token) {
+      headers['Authorization'] = 'Bearer ' + cloud.session.access_token;
+    } else {
+      headers['Authorization'] = 'Bearer ' + CLOUD.anonKey;
+    }
+    if (extra) {
+      Object.keys(extra).forEach(function (k) { headers[k] = extra[k]; });
+    }
+    return headers;
+  }
+
+  function cloudSaveSession() {
+    try {
+      if (cloud.session) localStorage.setItem('garage.auth', JSON.stringify(cloud.session));
+      else localStorage.removeItem('garage.auth');
+    } catch (err) {}
+  }
+
+  function cloudLoadSession() {
+    try {
+      var raw = localStorage.getItem('garage.auth');
+      if (!raw) return;
+      var parsed = JSON.parse(raw);
+      if (parsed && parsed.access_token) {
+        cloud.session = parsed;
+        cloud.user = parsed.user || null;
+      }
+    } catch (err) {}
+  }
+
+  function cloudRequest(path, options) {
+    options = options || {};
+    return fetch(CLOUD.url.replace(/\/$/, '') + path, {
+      method: options.method || 'GET',
+      headers: cloudHeaders(options.headers),
+      body: options.body ? JSON.stringify(options.body) : undefined
+    }).then(function (response) {
+      return response.text().then(function (text) {
+        var data = null;
+        try { data = text ? JSON.parse(text) : null; } catch (err) { data = text; }
+        if (!response.ok) {
+          var message = '';
+          if (data && data.error_description) message = data.error_description;
+          else if (data && data.msg) message = data.msg;
+          else if (data && data.message) message = data.message;
+          else if (data && data.error) message = typeof data.error === 'string' ? data.error : 'Ошибка сервиса';
+          else message = 'Ошибка ' + response.status;
+          var err = new Error(translateCloudError(message, response.status));
+          err.status = response.status;
+          throw err;
+        }
+        return data;
+      });
+    }, function () {
+      throw new Error('Нет связи с сервером. Проверьте интернет.');
+    });
+  }
+
+  function translateCloudError(message, status) {
+    var text = String(message || '');
+    if (/Invalid login credentials/i.test(text)) return 'Неверная почта или пароль';
+    if (/Email not confirmed/i.test(text)) return 'Почта не подтверждена. Проверьте письмо.';
+    if (/User already registered/i.test(text)) return 'Такая почта уже зарегистрирована. Нажмите «Вход».';
+    if (/Password should be at least/i.test(text)) return 'Пароль слишком короткий — минимум 6 символов';
+    if (/Unable to validate email/i.test(text)) return 'Похоже, в почте опечатка';
+    if (/Email rate limit/i.test(text)) return 'Слишком много писем. Подождите пару минут.';
+    if (/invalid_grant|Token has expired|JWT expired/i.test(text)) return 'Сессия устарела, войдите снова';
+    if (status === 0) return 'Нет связи с сервером';
+    return text || 'Что-то пошло не так';
+  }
+
+  function cloudSignIn(email, password) {
+    return cloudRequest('/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      body: { email: email, password: password }
+    }).then(function (data) {
+      cloud.session = data;
+      cloud.user = data.user || null;
+      cloudSaveSession();
+      return data;
+    });
+  }
+
+  function cloudSignUp(email, password) {
+    return cloudRequest('/auth/v1/signup', {
+      method: 'POST',
+      body: { email: email, password: password }
+    }).then(function (data) {
+      if (data && data.access_token) {
+        cloud.session = data;
+        cloud.user = data.user || null;
+        cloudSaveSession();
+        return { confirmed: true };
+      }
+      return { confirmed: false };
+    });
+  }
+
+  function cloudSignOut() {
+    var done = function () {
+      cloud.session = null;
+      cloud.user = null;
+      cloudSaveSession();
+    };
+    if (!cloud.session) { done(); return Promise.resolve(); }
+    return cloudRequest('/auth/v1/logout', { method: 'POST' }).catch(function () {}).then(done);
+  }
+
+  function cloudResetPassword(email) {
+    return cloudRequest('/auth/v1/recover', {
+      method: 'POST',
+      body: { email: email }
+    });
+  }
+
+  function cloudRefresh() {
+    if (!cloud.session || !cloud.session.refresh_token) return Promise.resolve(false);
+    return cloudRequest('/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      body: { refresh_token: cloud.session.refresh_token }
+    }).then(function (data) {
+      cloud.session = data;
+      cloud.user = data.user || cloud.user;
+      cloudSaveSession();
+      return true;
+    }).catch(function () {
+      cloud.session = null;
+      cloud.user = null;
+      cloudSaveSession();
+      return false;
+    });
+  }
+
+  function cloudPull() {
+    if (!cloud.user) return Promise.resolve(null);
+    return cloudRequest('/rest/v1/garage_data?user_id=eq.' + encodeURIComponent(cloud.user.id) + '&select=data,updated_at', {
+      headers: { 'Accept': 'application/json' }
+    }).then(function (rows) {
+      if (!Array.isArray(rows) || !rows.length) return null;
+      return rows[0];
+    });
+  }
+
+  function cloudPush(snap) {
+    if (!cloud.user) return Promise.resolve(false);
+    var payload = {
+      user_id: cloud.user.id,
+      data: snap,
+      updated_at: new Date().toISOString()
+    };
+    return cloudRequest('/rest/v1/garage_data?on_conflict=user_id', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: payload
+    }).then(function () {
+      return true;
+    });
+  }
+
+  function snapshot() {
+    return {
+      version: VERSION,
+      cars: state.cars,
+      tx: state.tx,
+      jobs: state.jobs,
+      savedAt: new Date().toISOString()
+    };
+  }
+
+  function applySnapshot(data) {
+    state = normalize(data);
+    save();
+    renderAll();
+  }
+
+  function dataIsEmpty(data) {
+    if (!data) return true;
+    return !(Array.isArray(data.cars) && data.cars.length) &&
+           !(Array.isArray(data.tx) && data.tx.length) &&
+           !(Array.isArray(data.jobs) && data.jobs.length);
+  }
+
+  function cloudSync(options) {
+    var opts = options || {};
+    if (!cloudConfigured() || !cloud.user || cloud.busy) return Promise.resolve(false);
+    cloud.busy = true;
+    cloud.error = '';
+    renderSync();
+
+    return cloudPull().then(function (remote) {
+      var localSnap = snapshot();
+      var remoteData = remote && remote.data ? remote.data : null;
+
+      if (!remoteData || dataIsEmpty(remoteData)) {
+        return cloudPush(localSnap).then(function () { return 'pushed'; });
+      }
+
+      if (dataIsEmpty(localSnap)) {
+        applySnapshot(remoteData);
+        return 'pulled';
+      }
+
+      var localTime = Date.parse(localSnap.savedAt || 0) || 0;
+      var remoteTime = Date.parse(remoteData.savedAt || remote.updated_at || 0) || 0;
+
+      if (remoteTime > localTime + 2000) {
+        try { localStorage.setItem('garage.archive.' + Date.now(), JSON.stringify(localSnap)); } catch (err) {}
+        applySnapshot(remoteData);
+        return 'pulled';
+      }
+
+      if (localTime > remoteTime + 2000) {
+        return cloudPush(localSnap).then(function () { return 'pushed'; });
+      }
+
+      return 'same';
+    }).then(function (result) {
+      cloud.busy = false;
+      cloud.lastSync = new Date().toISOString();
+      cloud.pending = false;
+      renderSync();
+      if (opts.silent !== true) {
+        var label = {
+          pushed: 'Данные отправлены на сервер',
+          pulled: 'Данные загружены с сервера',
+          same: 'Всё совпадает'
+        }[result] || 'Синхронизировано';
+        toast(label);
+      }
+      return true;
+    }).catch(function (err) {
+      cloud.busy = false;
+      cloud.error = err.message || 'Не удалось синхронизировать';
+      renderSync();
+      if (opts.silent !== true) toast(cloud.error);
+      return false;
+    });
+  }
+
+  function cloudQueue() {
+    if (!cloud.user) return;
+    cloud.pending = true;
+    window.clearTimeout(cloudQueue.timer);
+    cloudQueue.timer = window.setTimeout(function () {
+      cloudSync({ silent: true });
+    }, 2500);
+  }
+
+  function renderSync() {
+    var box = el('sync-card');
+    if (!box) return;
+
+    if (!cloudConfigured()) {
+      box.innerHTML = '<p class="sync__note">Синхронизация не подключена. Приложение работает локально: данные хранятся на этом телефоне.</p>';
+      return;
+    }
+
+    if (!cloud.user) {
+      box.innerHTML =
+        '<div class="sync">' +
+          '<div class="sync__state"><span class="sync__dot"></span>Вход не выполнен</div>' +
+          '<p class="sync__note">Войдите, чтобы видеть те же машины и траты на другом телефоне.</p>' +
+          '<div class="sync__actions">' +
+            '<button class="btn btn--sm" type="button" data-auth-open="login">Войти</button>' +
+            '<button class="btn btn--ghost btn--sm" type="button" data-auth-open="signup">Регистрация</button>' +
+          '</div>' +
+        '</div>';
+      return;
+    }
+
+    var dotCls = cloud.busy ? 'sync__dot sync__dot--wait'
+      : (cloud.error ? 'sync__dot sync__dot--off' : 'sync__dot sync__dot--on');
+    var stateText = cloud.busy ? 'Синхронизация…'
+      : (cloud.error ? cloud.error
+      : (cloud.pending ? 'Есть неотправленные изменения' : 'Синхронизировано'));
+
+    var timeText = '';
+    if (cloud.lastSync) {
+      var d = new Date(cloud.lastSync);
+      timeText = 'Последняя синхронизация: ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+    }
+
+    box.innerHTML =
+      '<div class="sync">' +
+        '<div class="sync__state"><span class="' + dotCls + '"></span>' + esc(stateText) + '</div>' +
+        '<div class="sync__email">' + esc(cloud.user.email || '') + '</div>' +
+        (timeText ? '<p class="sync__note">' + esc(timeText) + '</p>' : '') +
+        '<div class="sync__actions">' +
+          '<button class="btn btn--sm" type="button" data-sync-now' + (cloud.busy ? ' disabled' : '') + '>Синхронизировать</button>' +
+          '<button class="btn btn--ghost btn--sm" type="button" data-sync-out>Выйти</button>' +
+        '</div>' +
+        '<p class="sync__note">При расхождении побеждает более свежая версия, старая сохраняется в архиве телефона.</p>' +
+      '</div>';
+  }
+
+  var authMode = 'login';
+
+  function openAuth(mode) {
+    if (!cloudConfigured()) { toast('Синхронизация не настроена'); return; }
+    authMode = mode === 'signup' ? 'signup' : 'login';
+    syncAuthUI();
+    el('auth-error').hidden = true;
+    el('auth-email').value = '';
+    el('auth-password').value = '';
+    el('auth').hidden = false;
+    document.body.classList.add('is-locked');
+    window.setTimeout(function () { el('auth-email').focus(); }, 120);
+  }
+
+  function closeAuth() {
+    el('auth').hidden = true;
+    document.body.classList.remove('is-locked');
+  }
+
+  function syncAuthUI() {
+    var signup = authMode === 'signup';
+    el('auth-title').textContent = signup ? 'Регистрация' : 'Вход в аккаунт';
+    el('auth-sub').textContent = signup
+      ? 'Создайте аккаунт — данные появятся на всех ваших телефонах.'
+      : 'Один аккаунт — данные на всех телефонах.';
+    el('auth-submit').textContent = signup ? 'Создать аккаунт' : 'Войти';
+    el('auth-password').setAttribute('autocomplete', signup ? 'new-password' : 'current-password');
+    el('auth-forgot').hidden = signup;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-auth-mode]'), function (tab) {
+      var on = tab.getAttribute('data-auth-mode') === authMode;
+      tab.classList.toggle('is-on', on);
+      tab.setAttribute('aria-selected', String(on));
+    });
+  }
+
+  function authFail(message) {
+    var box = el('auth-error');
+    box.textContent = message;
+    box.hidden = false;
+  }
+
+  function submitAuth() {
+    var email = el('auth-email').value.trim();
+    var password = el('auth-password').value;
+    el('auth-error').hidden = true;
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return authFail('Проверьте адрес почты');
+    if (password.length < 6) return authFail('Пароль минимум 6 символов');
+
+    var btn = el('auth-submit');
+    btn.disabled = true;
+    btn.textContent = authMode === 'signup' ? 'Создаём…' : 'Входим…';
+
+    var action = authMode === 'signup' ? cloudSignUp(email, password) : cloudSignIn(email, password);
+
+    action.then(function (result) {
+      btn.disabled = false;
+      syncAuthUI();
+      if (result && result.confirmed === false) {
+        closeAuth();
+        toast('Аккаунт создан. Подтвердите почту по ссылке из письма.');
+        renderSync();
+        return;
+      }
+      closeAuth();
+      cloud.lastSync = '';
+      renderSync();
+      toast('Вы вошли как ' + email);
+      cloudSync({ silent: false });
+    }).catch(function (err) {
+      btn.disabled = false;
+      syncAuthUI();
+      authFail(err.message || 'Не удалось войти');
+    });
+  }
+
   /* ---------- События ---------- */
   document.addEventListener('click', function (event) {
     var closer = event.target.closest('[data-close]');
@@ -2701,6 +3222,30 @@ select.input {
     if (exportKind === 'csv') { exportCsv(); return; }
     if (exportKind === 'json') { exportJson(); return; }
 
+    var authOpen = target.getAttribute('data-auth-open');
+    if (authOpen) { openAuth(authOpen); return; }
+
+    var authModeBtn = target.getAttribute('data-auth-mode');
+    if (authModeBtn) { authMode = authModeBtn === 'signup' ? 'signup' : 'login'; syncAuthUI(); el('auth-error').hidden = true; return; }
+
+    if (target.hasAttribute('data-sync-now')) { cloudSync({ silent: false }); return; }
+
+    if (target.hasAttribute('data-sync-out')) {
+      askConfirm({
+        title: 'Выйти из аккаунта?',
+        text: 'Данные останутся на этом телефоне и в облаке. Чтобы снова синхронизироваться, войдите опять.',
+        confirmLabel: 'Выйти',
+        danger: false,
+        onConfirm: function () {
+          cloudSignOut().then(function () {
+            renderSync();
+            toast('Вы вышли из аккаунта');
+          });
+        }
+      });
+      return;
+    }
+
     if (target.hasAttribute('data-import')) { el('import-file').click(); return; }
     if (target.hasAttribute('data-wipe')) { wipeAll(); }
   });
@@ -2727,6 +3272,35 @@ select.input {
     if (file) importFile(file);
   });
 
+  /* Вход и восстановление пароля */
+  el('auth-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+    submitAuth();
+  });
+
+  el('auth-later').addEventListener('click', function () { closeAuth(); });
+
+  el('auth-forgot').addEventListener('click', function () {
+    var email = el('auth-email').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      authFail('Сначала впишите почту — пришлём ссылку для сброса');
+      return;
+    }
+    el('auth-error').hidden = true;
+    cloudResetPassword(email).then(function () {
+      closeAuth();
+      toast('Письмо для сброса пароля отправлено на ' + email);
+    }).catch(function (err) {
+      authFail(err.message || 'Не удалось отправить письмо');
+    });
+  });
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && cloud.user && !cloud.busy) {
+      cloudSync({ silent: true });
+    }
+  });
+
   el('banner-reset').addEventListener('click', function () {
     try { localStorage.removeItem(KEY); } catch (err) {}
     state = emptyState();
@@ -2738,6 +3312,7 @@ select.input {
 
   document.addEventListener('keydown', function (event) {
     if (event.key !== 'Escape') return;
+    if (!el('auth').hidden) { closeAuth(); return; }
     if (!el('confirm').hidden) { closeConfirm(); return; }
     if (!el('sheet').hidden) closeSheet();
   });
@@ -2833,9 +3408,20 @@ select.input {
 
   function init() {
     load();
+    cloudLoadSession();
     goTo('overview');
     renderAll();
     setupOffline();
+    renderSync();
+
+    /* Если сессия есть — обновляем токен и подтягиваем данные */
+    if (cloudConfigured() && cloud.session) {
+      cloudRefresh().then(function (ok) {
+        renderSync();
+        if (ok) cloudSync({ silent: true });
+      });
+    }
+
     if (storageProblem === 'blocked') {
       showBanner('Браузер запрещает сохранять данные. Изменения не сохранятся после закрытия.', false);
     } else if (storageProblem === 'corrupt') {
