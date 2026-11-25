@@ -1,5 +1,6 @@
 /* Service worker: оффлайн-доступ к «Гаражу» */
-var CACHE = 'garage-v1';
+var CACHE = 'garage-v2';
+
 var ASSETS = [
   './',
   './index.html',
@@ -8,13 +9,15 @@ var ASSETS = [
   './assets/icon-192.png',
   './assets/icon-512.png',
   './assets/icon-maskable-512.png',
-  './assets/apple-touch-icon.png'
+  './assets/apple-touch-icon.png',
+  './assets/fonts/manrope-cyrillic.woff2',
+  './assets/fonts/manrope-cyrillic-ext.woff2',
+  './assets/fonts/manrope-latin.woff2'
 ];
 
 self.addEventListener('install', function (event) {
   event.waitUntil(
     caches.open(CACHE).then(function (cache) {
-      /* addAll падает, если хоть один файл недоступен — кладём по одному */
       return Promise.all(ASSETS.map(function (url) {
         return cache.add(new Request(url, { cache: 'reload' })).catch(function () {});
       }));
@@ -42,31 +45,33 @@ self.addEventListener('fetch', function (event) {
   if (request.method !== 'GET') return;
 
   var url = new URL(request.url);
+
+  /* Всё внешнее (шрифты и т.п.) — только сеть, офлайн просто пропускаем */
   if (url.origin !== self.location.origin) return;
 
-  /* HTML — сначала сеть, чтобы обновления прилетали, оффлайн — из кэша */
-  if (request.mode === 'navigate' || (request.headers.get('accept') || '').indexOf('text/html') !== -1) {
+  /* Навигация: сначала сеть, офлайн — из кэша, всегда есть запасной index.html */
+  if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request).then(function (response) {
         var copy = response.clone();
-        caches.open(CACHE).then(function (cache) { cache.put(request, copy); });
+        caches.open(CACHE).then(function (cache) { cache.put('./index.html', copy); }).catch(function () {});
         return response;
       }).catch(function () {
-        return caches.match(request).then(function (hit) {
-          return hit || caches.match('./index.html');
+        return caches.match('./index.html').then(function (hit) {
+          return hit || caches.match('./');
         });
       })
     );
     return;
   }
 
-  /* Остальное — из кэша, в фоне обновляем */
+  /* Остальное: из кэша сразу, обновление — в фоне */
   event.respondWith(
     caches.match(request).then(function (hit) {
       if (hit) {
         fetch(request).then(function (response) {
           if (response && response.ok) {
-            caches.open(CACHE).then(function (cache) { cache.put(request, response); });
+            caches.open(CACHE).then(function (cache) { cache.put(request, response); }).catch(function () {});
           }
         }).catch(function () {});
         return hit;
@@ -74,32 +79,12 @@ self.addEventListener('fetch', function (event) {
       return fetch(request).then(function (response) {
         if (response && response.ok) {
           var copy = response.clone();
-          caches.open(CACHE).then(function (cache) { cache.put(request, copy); });
+          caches.open(CACHE).then(function (cache) { cache.put(request, copy); }).catch(function () {});
         }
         return response;
       }).catch(function () {
-        return hit;
+        return new Response('', { status: 504, statusText: 'Offline' });
       });
-    })
-  );
-});
-
-/* Шрифты Google: кэшируем отдельно, чтобы оффлайн сохранялся вид */
-self.addEventListener('fetch', function (event) {
-  var request = event.request;
-  if (request.method !== 'GET') return;
-  var url = new URL(request.url);
-  var isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
-  if (!isFont) return;
-
-  event.respondWith(
-    caches.match(request).then(function (hit) {
-      if (hit) return hit;
-      return fetch(request).then(function (response) {
-        var copy = response.clone();
-        caches.open(CACHE).then(function (cache) { cache.put(request, copy); }).catch(function () {});
-        return response;
-      }).catch(function () { return hit; });
     })
   );
 });
