@@ -6,6 +6,12 @@
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#080D19">
 <title>Гараж — учёт перепродажи авто</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Гараж">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1185,6 +1191,16 @@ select.input {
       <header class="topbar">
         <h1 class="screen__title">Ещё</h1>
       </header>
+
+      <section class="block" style="margin-top:0">
+        <div class="card" id="install-card" hidden>
+          <div class="block__head" style="margin-bottom:6px">
+            <h2 class="block__title" style="font-size:var(--fs-md)">📲 Приложение на телефон</h2>
+          </div>
+          <p class="hint" id="install-text" style="margin:0 0 12px"></p>
+          <button class="btn btn--sm" type="button" id="install-btn" hidden>Установить</button>
+        </div>
+      </section>
 
       <section class="block" style="margin-top:0">
         <h2 class="block__title">За всё время</h2>
@@ -2719,15 +2735,97 @@ select.input {
     renderAll();
   });
 
+  /* ---------- Оффлайн и установка на телефон ---------- */
+  var installPrompt = null;
+
+  function isStandalone() {
+    return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+      window.navigator.standalone === true;
+  }
+
+  function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  }
+
+  function updateInstallCard() {
+    var card = el('install-card');
+    if (!card) return;
+    if (isStandalone()) { card.hidden = true; return; }
+
+    var text = el('install-text');
+    var btn = el('install-btn');
+
+    if (installPrompt) {
+      text.textContent = 'Установите приложение на телефон — откроется с иконки и будет работать без интернета.';
+      btn.textContent = 'Установить';
+      btn.hidden = false;
+      card.hidden = false;
+      return;
+    }
+
+    if (isIOS()) {
+      text.textContent = 'На iPhone: «Поделиться» → «На экран «Домой»». После этого приложение откроется с иконки и будет работать без интернета.';
+      btn.hidden = true;
+      card.hidden = false;
+      return;
+    }
+
+    /* Android/десктоп: браузер не прислал событие — показываем инструкцию */
+    text.textContent = 'В меню браузера выберите «Установить приложение» или «Добавить на главный экран». После установки приложение работает без интернета.';
+    btn.hidden = true;
+    card.hidden = false;
+  }
+
+  function setupOffline() {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
+
+    window.addEventListener('beforeinstallprompt', function (event) {
+      event.preventDefault();
+      installPrompt = event;
+      updateInstallCard();
+    });
+
+    window.addEventListener('appinstalled', function () {
+      installPrompt = null;
+      updateInstallCard();
+      toast('Приложение установлено');
+    });
+
+    var btn = el('install-btn');
+    if (btn) {
+      btn.addEventListener('click', function () {
+        if (!installPrompt) return;
+        installPrompt.prompt();
+        installPrompt.userChoice.then(function () {
+          installPrompt = null;
+          updateInstallCard();
+        });
+      });
+    }
+
+    updateInstallCard();
+  }
+
   function init() {
     load();
     goTo('overview');
     renderAll();
+    setupOffline();
     if (storageProblem === 'blocked') {
       showBanner('Браузер запрещает сохранять данные. Изменения не сохранятся после закрытия.', false);
     } else if (storageProblem === 'corrupt') {
       showBanner('Сохранённые данные повреждены. Можно начать заново.', true);
     }
+
+    /* Быстрые действия из иконки приложения */
+    var params = new URLSearchParams(location.search);
+    var action = params.get('action');
+    if (action === 'tx') window.setTimeout(function () { openTxSheet(null); }, 200);
+    if (action === 'car') window.setTimeout(function () { openCarSheet(null); }, 200);
   }
 
   init();
