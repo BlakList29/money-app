@@ -1,5 +1,5 @@
 /* Service worker: оффлайн-доступ к «Гаражу» */
-var CACHE = 'garage-v2';
+var CACHE = 'garage-v3';
 
 var ASSETS = [
   './',
